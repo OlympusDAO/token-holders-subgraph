@@ -10,7 +10,7 @@ import {
   Value,
   ValueKind} from "@graphprotocol/graph-ts";
 
-export class TokenBalance extends Entity {
+export class HolderBalance extends Entity {
   constructor(id: string) {
     super();
     this.set("id", Value.fromString(id));
@@ -18,18 +18,18 @@ export class TokenBalance extends Entity {
 
   save(): void {
     const id = this.get("id");
-    assert(id != null, "Cannot save TokenBalance entity without an ID");
+    assert(id != null, "Cannot save HolderBalance entity without an ID");
     if (id) {
       assert(
         id.kind == ValueKind.STRING,
-        `Entities of type TokenBalance must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`
+        `Entities of type HolderBalance must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`
       );
-      store.set("TokenBalance", id.toString(), this);
+      store.set("HolderBalance", id.toString(), this);
     }
   }
 
-  static load(id: string): TokenBalance | null {
-    return changetype<TokenBalance | null>(store.get("TokenBalance", id));
+  static load(id: string): HolderBalance | null {
+    return changetype<HolderBalance | null>(store.get("HolderBalance", id));
   }
 
   get id(): string {
@@ -41,13 +41,13 @@ export class TokenBalance extends Entity {
     this.set("id", Value.fromString(value));
   }
 
-  get owner(): Bytes {
-    const value = this.get("owner");
-    return value!.toBytes();
+  get block(): BigInt {
+    const value = this.get("block");
+    return value!.toBigInt();
   }
 
-  set owner(value: Bytes) {
-    this.set("owner", Value.fromBytes(value));
+  set block(value: BigInt) {
+    this.set("block", Value.fromBigInt(value));
   }
 
   get balance(): BigDecimal {
@@ -58,21 +58,113 @@ export class TokenBalance extends Entity {
   set balance(value: BigDecimal) {
     this.set("balance", Value.fromBigDecimal(value));
   }
+}
 
-  get tokenName(): string | null {
-    const value = this.get("tokenName");
-    if (!value || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toString();
+export class TokenHolder extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    const id = this.get("id");
+    assert(id != null, "Cannot save TokenHolder entity without an ID");
+    if (id) {
+      assert(
+        id.kind == ValueKind.STRING,
+        `Entities of type TokenHolder must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`
+      );
+      store.set("TokenHolder", id.toString(), this);
     }
   }
 
-  set tokenName(value: string | null) {
-    if (!value) {
-      this.unset("tokenName");
-    } else {
-      this.set("tokenName", Value.fromString(<string>value));
+  static load(id: string): TokenHolder | null {
+    return changetype<TokenHolder | null>(store.get("TokenHolder", id));
+  }
+
+  get id(): string {
+    const value = this.get("id");
+    return value!.toString();
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get holder(): Bytes {
+    const value = this.get("holder");
+    return value!.toBytes();
+  }
+
+  set holder(value: Bytes) {
+    this.set("holder", Value.fromBytes(value));
+  }
+
+  get balances(): Array<string> {
+    const value = this.get("balances");
+    return value!.toStringArray();
+  }
+
+  set balances(value: Array<string>) {
+    this.set("balances", Value.fromStringArray(value));
+  }
+}
+
+export class Token extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    const id = this.get("id");
+    assert(id != null, "Cannot save Token entity without an ID");
+    if (id) {
+      assert(
+        id.kind == ValueKind.STRING,
+        `Entities of type Token must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`
+      );
+      store.set("Token", id.toString(), this);
     }
+  }
+
+  static load(id: string): Token | null {
+    return changetype<Token | null>(store.get("Token", id));
+  }
+
+  get id(): string {
+    const value = this.get("id");
+    return value!.toString();
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get address(): Bytes {
+    const value = this.get("address");
+    return value!.toBytes();
+  }
+
+  set address(value: Bytes) {
+    this.set("address", Value.fromBytes(value));
+  }
+
+  get name(): string {
+    const value = this.get("name");
+    return value!.toString();
+  }
+
+  set name(value: string) {
+    this.set("name", Value.fromString(value));
+  }
+
+  get holders(): Array<string> {
+    const value = this.get("holders");
+    return value!.toStringArray();
+  }
+
+  set holders(value: Array<string>) {
+    this.set("holders", Value.fromStringArray(value));
   }
 }
