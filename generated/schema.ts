@@ -50,13 +50,13 @@ export class TokenBalance extends Entity {
     this.set("owner", Value.fromBytes(value));
   }
 
-  get balance(): BigInt {
+  get balance(): BigDecimal {
     const value = this.get("balance");
-    return value!.toBigInt();
+    return value!.toBigDecimal();
   }
 
-  set balance(value: BigInt) {
-    this.set("balance", Value.fromBigInt(value));
+  set balance(value: BigDecimal) {
+    this.set("balance", Value.fromBigDecimal(value));
   }
 
   get tokenName(): string | null {

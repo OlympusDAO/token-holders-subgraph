@@ -1,7 +1,8 @@
-import { Address, BigInt, log, store } from "@graphprotocol/graph-ts";
+import { Address, BigDecimal, BigInt, log, store } from "@graphprotocol/graph-ts";
 
 import { ERC20, Transfer } from "../generated/gOHM/ERC20";
 import { TokenBalance } from "../generated/schema";
+import { toDecimal } from "./decimalHelper";
 
 // Inspired by: https://github.com/xdaichain/token-holders-subgraph/blob/master/src/mapping.ts
 
@@ -13,7 +14,7 @@ function createTokenBalance(
   const tokenBalance = new TokenBalance(entityId);
   tokenBalance.owner = holderAddress;
   tokenBalance.tokenName = "gOHM";
-  tokenBalance.balance = BigInt.zero();
+  tokenBalance.balance = BigDecimal.zero();
 
   return tokenBalance;
 }
@@ -36,11 +37,13 @@ function updateTokenBalance(
       ? existingTokenBalance
       : createTokenBalance(entityId, tokenAddress, holderAddress);
 
-  tokenBalance.balance = isSender
-    ? tokenBalance.balance.minus(value)
-    : tokenBalance.balance.plus(value);
+  const decimalValue = toDecimal(value, 18);
 
-  if (tokenBalance.balance.isZero()) {
+  tokenBalance.balance = isSender
+    ? tokenBalance.balance.minus(decimalValue)
+    : tokenBalance.balance.plus(decimalValue);
+
+  if (tokenBalance.balance.equals(BigDecimal.zero())) {
     store.remove("TokenBalance", entityId);
   } else {
     tokenBalance.save();

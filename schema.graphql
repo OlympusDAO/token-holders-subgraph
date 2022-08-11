@@ -1,6 +1,6 @@
 type TokenBalance @entity {
   id: ID!
   owner: Bytes! # address
-  balance: BigInt!
+  balance: BigDecimal!
   tokenName: String
 }
