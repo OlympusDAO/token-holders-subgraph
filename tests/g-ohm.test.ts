@@ -9,7 +9,7 @@ import {
 
 import { Approval } from "../generated/gOHM/gOHM"
 import { ExampleEntity } from "../generated/schema"
-import { handleApproval } from "../src/g-ohm"
+import { handleApproval } from "../src/handleTransferEvent"
 import { createApprovalEvent } from "./g-ohm-utils"
 
 // Tests structure (matchstick-as >=0.5.0)

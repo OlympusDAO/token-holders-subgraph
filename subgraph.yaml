@@ -7,26 +7,18 @@ dataSources:
     network: mainnet
     source:
       address: "0x0ab87046fBb341D058F17CBC4c1133F25a20a52f"
-      abi: gOHM
+      abi: ERC20
+      startBlock: 13674957
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
       language: wasm/assemblyscript
       entities:
-        - Approval
-        - DelegateChanged
-        - DelegateVotesChanged
         - Transfer
       abis:
-        - name: gOHM
-          file: ./abis/gOHM.json
+        - name: ERC20
+          file: ./abis/ERC20.json
       eventHandlers:
-        - event: Approval(indexed address,indexed address,uint256)
-          handler: handleApproval
-        - event: DelegateChanged(indexed address,indexed address,indexed address)
-          handler: handleDelegateChanged
-        - event: DelegateVotesChanged(indexed address,uint256,uint256)
-          handler: handleDelegateVotesChanged
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
-      file: ./src/g-ohm.ts
+      file: ./src/handleTransferEvent.ts
