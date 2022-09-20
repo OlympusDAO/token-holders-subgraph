@@ -1,18 +1,24 @@
-type HolderBalance @entity(immutable: true) {
-  id: ID! # token-address-block
+type TokenHolderBalance @entity(immutable: true) {
+  id: ID! # <tokenholder ID>-transaction
+  balance: BigInt!
   block: BigInt!
-  balance: BigDecimal!
+  date: String! # ISO 8601 format
+  holder: TokenHolder!
+  timestamp: String! # Unix format
+  transaction: Bytes!
+  value: BigInt!
 }
 
 type TokenHolder @entity {
-  id: ID! # token-address
+  id: ID! # <token ID>-holder
+  balance: BigInt!
   holder: Bytes!
-  balances: [HolderBalance!]!
+  token: Token!
 }
 
 type Token @entity {
-  id: ID! # token
+  id: ID! # token-blockchain
   address: Bytes!
+  blockchain: String!
   name: String!
-  holders: [TokenHolder!]!
 }

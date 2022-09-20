@@ -10,7 +10,7 @@ import {
   Value,
   ValueKind} from "@graphprotocol/graph-ts";
 
-export class HolderBalance extends Entity {
+export class TokenHolderBalance extends Entity {
   constructor(id: string) {
     super();
     this.set("id", Value.fromString(id));
@@ -18,18 +18,20 @@ export class HolderBalance extends Entity {
 
   save(): void {
     const id = this.get("id");
-    assert(id != null, "Cannot save HolderBalance entity without an ID");
+    assert(id != null, "Cannot save TokenHolderBalance entity without an ID");
     if (id) {
       assert(
         id.kind == ValueKind.STRING,
-        `Entities of type HolderBalance must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`
+        `Entities of type TokenHolderBalance must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`
       );
-      store.set("HolderBalance", id.toString(), this);
+      store.set("TokenHolderBalance", id.toString(), this);
     }
   }
 
-  static load(id: string): HolderBalance | null {
-    return changetype<HolderBalance | null>(store.get("HolderBalance", id));
+  static load(id: string): TokenHolderBalance | null {
+    return changetype<TokenHolderBalance | null>(
+      store.get("TokenHolderBalance", id)
+    );
   }
 
   get id(): string {
@@ -41,6 +43,15 @@ export class HolderBalance extends Entity {
     this.set("id", Value.fromString(value));
   }
 
+  get balance(): BigInt {
+    const value = this.get("balance");
+    return value!.toBigInt();
+  }
+
+  set balance(value: BigInt) {
+    this.set("balance", Value.fromBigInt(value));
+  }
+
   get block(): BigInt {
     const value = this.get("block");
     return value!.toBigInt();
@@ -50,13 +61,49 @@ export class HolderBalance extends Entity {
     this.set("block", Value.fromBigInt(value));
   }
 
-  get balance(): BigDecimal {
-    const value = this.get("balance");
-    return value!.toBigDecimal();
+  get date(): string {
+    const value = this.get("date");
+    return value!.toString();
   }
 
-  set balance(value: BigDecimal) {
-    this.set("balance", Value.fromBigDecimal(value));
+  set date(value: string) {
+    this.set("date", Value.fromString(value));
+  }
+
+  get holder(): string {
+    const value = this.get("holder");
+    return value!.toString();
+  }
+
+  set holder(value: string) {
+    this.set("holder", Value.fromString(value));
+  }
+
+  get timestamp(): string {
+    const value = this.get("timestamp");
+    return value!.toString();
+  }
+
+  set timestamp(value: string) {
+    this.set("timestamp", Value.fromString(value));
+  }
+
+  get transaction(): Bytes {
+    const value = this.get("transaction");
+    return value!.toBytes();
+  }
+
+  set transaction(value: Bytes) {
+    this.set("transaction", Value.fromBytes(value));
+  }
+
+  get value(): BigInt {
+    const value = this.get("value");
+    return value!.toBigInt();
+  }
+
+  set value(value: BigInt) {
+    this.set("value", Value.fromBigInt(value));
   }
 }
 
@@ -91,6 +138,15 @@ export class TokenHolder extends Entity {
     this.set("id", Value.fromString(value));
   }
 
+  get balance(): BigInt {
+    const value = this.get("balance");
+    return value!.toBigInt();
+  }
+
+  set balance(value: BigInt) {
+    this.set("balance", Value.fromBigInt(value));
+  }
+
   get holder(): Bytes {
     const value = this.get("holder");
     return value!.toBytes();
@@ -100,13 +156,13 @@ export class TokenHolder extends Entity {
     this.set("holder", Value.fromBytes(value));
   }
 
-  get balances(): Array<string> {
-    const value = this.get("balances");
-    return value!.toStringArray();
+  get token(): string {
+    const value = this.get("token");
+    return value!.toString();
   }
 
-  set balances(value: Array<string>) {
-    this.set("balances", Value.fromStringArray(value));
+  set token(value: string) {
+    this.set("token", Value.fromString(value));
   }
 }
 
@@ -150,6 +206,15 @@ export class Token extends Entity {
     this.set("address", Value.fromBytes(value));
   }
 
+  get blockchain(): string {
+    const value = this.get("blockchain");
+    return value!.toString();
+  }
+
+  set blockchain(value: string) {
+    this.set("blockchain", Value.fromString(value));
+  }
+
   get name(): string {
     const value = this.get("name");
     return value!.toString();
@@ -157,14 +222,5 @@ export class Token extends Entity {
 
   set name(value: string) {
     this.set("name", Value.fromString(value));
-  }
-
-  get holders(): Array<string> {
-    const value = this.get("holders");
-    return value!.toStringArray();
-  }
-
-  set holders(value: Array<string>) {
-    this.set("holders", Value.fromStringArray(value));
   }
 }

@@ -1,28 +1,33 @@
-import { Address, BigDecimal, BigInt, log, store } from "@graphprotocol/graph-ts";
+import { Address, BigInt, Bytes } from "@graphprotocol/graph-ts";
 
-import { ERC20, Transfer } from "../generated/gOHM/ERC20";
-import { HolderBalance, Token, TokenBalance, TokenHolder } from "../generated/schema";
-import { toDecimal } from "./decimalHelper";
+import { Transfer } from "../generated/gOHM/ERC20";
+import { Token, TokenHolder, TokenHolderBalance } from "../generated/schema";
 
 // Inspired by: https://github.com/xdaichain/token-holders-subgraph/blob/master/src/mapping.ts
 
-function createOrLoadToken(address: Address, name: string): Token {
-  const loadedToken = Token.load(name);
+export const getISO8601StringFromTimestamp = (timestamp: i64): string => {
+  const date = new Date(timestamp);
+  return date.toISOString();
+};
+
+function createOrLoadToken(address: Address, name: string, blockchain: string): Token {
+  const tokenId = `${name}/${blockchain}`;
+  const loadedToken = Token.load(tokenId);
   if (loadedToken !== null) {
     return loadedToken;
   }
 
-  const token = new Token(name);
+  const token = new Token(tokenId);
   token.address = address;
   token.name = name;
-  token.holders = [];
+  token.blockchain = blockchain;
   token.save();
 
   return token;
 }
 
 function createOrLoadTokenHolder(token: Token, address: Address): TokenHolder {
-  const holderId = token.id + "/" + address.toHexString();
+  const holderId = `${token.id}/${address.toHexString()}`;
   const loadedHolder = TokenHolder.load(holderId);
   if (loadedHolder !== null) {
     return loadedHolder;
@@ -30,30 +35,33 @@ function createOrLoadTokenHolder(token: Token, address: Address): TokenHolder {
 
   const tokenHolder = new TokenHolder(holderId);
   tokenHolder.holder = address;
-  tokenHolder.balances = [];
+  tokenHolder.balance = BigInt.zero();
+  tokenHolder.token = token.id;
   tokenHolder.save();
-
-  token.holders.push(tokenHolder.id);
-  token.save();
 
   return tokenHolder;
 }
 
-function getLatestBalance(tokenHolder: TokenHolder): TokenBalance | null {}
-
-function createHolderBalance(
+function createTokenHolderBalance(
   tokenHolder: TokenHolder,
-  balance: BigDecimal,
+  balance: BigInt,
   block: BigInt,
-): TokenBalance {
-  const balanceId = tokenHolder.id + "/" + block.toString();
-  const tokenBalance = new HolderBalance(balanceId);
-  tokenBalance.block = block;
-  tokenBalance.balance = balance;
-  tokenBalance.save();
+  timestamp: BigInt,
+  transaction: Bytes,
+  value: BigInt,
+): TokenHolderBalance {
+  const unixTimestamp = timestamp.toI64() * 1000;
 
-  tokenHolder.balances.push(tokenBalance.id);
-  tokenHolder.save();
+  const balanceId = `${tokenHolder.id}/${transaction.toHexString()}`;
+  const tokenBalance = new TokenHolderBalance(balanceId);
+  tokenBalance.block = block;
+  tokenBalance.timestamp = unixTimestamp.toString();
+  tokenBalance.date = getISO8601StringFromTimestamp(unixTimestamp);
+  tokenBalance.balance = balance;
+  tokenBalance.transaction = transaction;
+  tokenBalance.holder = tokenHolder.id;
+  tokenBalance.value = value;
+  tokenBalance.save();
 
   return tokenBalance;
 }
@@ -63,6 +71,9 @@ function updateTokenBalance(
   holderAddress: Address,
   value: BigInt,
   isSender: boolean,
+  block: BigInt,
+  timestamp: BigInt,
+  transaction: Bytes,
 ): void {
   // Ignore null address
   if (holderAddress.toHexString().toLowerCase() == "0x0000000000000000000000000000000000000000") {
@@ -70,38 +81,40 @@ function updateTokenBalance(
   }
 
   // Get the parent token
-  const token = createOrLoadToken(tokenAddress, "gOHM");
+  const token = createOrLoadToken(tokenAddress, "gOHM", "Ethereum");
 
   // Get the token holder record
   const tokenHolder = createOrLoadTokenHolder(token, holderAddress);
 
-  // Get the latest balance for the holder
-
   // Calculate the new balance
+  const adjustedValue = isSender ? BigInt.fromString("-1").times(value) : value;
+  const newBalance = tokenHolder.balance.plus(adjustedValue);
 
-  // TODO use map of balances? also store the latest balance
+  // Create a new balance record
+  createTokenHolderBalance(tokenHolder, newBalance, block, timestamp, transaction, adjustedValue);
 
-  const entityId = tokenAddress.toHexString() + "-" + holderAddress.toHexString();
-  const existingTokenBalance = TokenBalance.load(entityId);
-  const tokenBalance =
-    existingTokenBalance !== null
-      ? existingTokenBalance
-      : createTokenBalance(entityId, tokenAddress, holderAddress);
-
-  const decimalValue = toDecimal(value, 18);
-
-  tokenBalance.balance = isSender
-    ? tokenBalance.balance.minus(decimalValue)
-    : tokenBalance.balance.plus(decimalValue);
-
-  if (tokenBalance.balance.equals(BigDecimal.zero())) {
-    store.remove("TokenBalance", entityId);
-  } else {
-    tokenBalance.save();
-  }
+  // Update the TokenHolder
+  tokenHolder.balance = newBalance;
+  tokenHolder.save();
 }
 
 export function handleTransfer(event: Transfer): void {
-  updateTokenBalance(event.address, event.params.from, event.params.value, true);
-  updateTokenBalance(event.address, event.params.to, event.params.value, false);
+  updateTokenBalance(
+    event.address,
+    event.params.from,
+    event.params.value,
+    true,
+    event.block.number,
+    event.block.timestamp,
+    event.transaction.hash,
+  );
+  updateTokenBalance(
+    event.address,
+    event.params.to,
+    event.params.value,
+    false,
+    event.block.number,
+    event.block.timestamp,
+    event.transaction.hash,
+  );
 }
