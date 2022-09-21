@@ -1,9 +1,15 @@
-import { Address, BigInt, Bytes } from "@graphprotocol/graph-ts";
+import { Address, BigDecimal, BigInt, Bytes, log } from "@graphprotocol/graph-ts";
 
 import { Transfer } from "../generated/gOHM/ERC20";
 import { Token, TokenHolder, TokenHolderBalance } from "../generated/schema";
+import { arrayIncludesLoose } from "./arrayHelper";
+import { toDecimal } from "./decimalHelper";
 
 // Inspired by: https://github.com/xdaichain/token-holders-subgraph/blob/master/src/mapping.ts
+
+const ERC20_GOHM = "0x0ab87046fbb341d058f17cbc4c1133f25a20a52f";
+const NULL = "0x0000000000000000000000000000000000000000";
+const IGNORED_ADDRESSES = [ERC20_GOHM, NULL];
 
 export const getISO8601StringFromTimestamp = (timestamp: i64): string => {
   const date = new Date(timestamp);
@@ -35,7 +41,7 @@ function createOrLoadTokenHolder(token: Token, address: Address): TokenHolder {
 
   const tokenHolder = new TokenHolder(holderId);
   tokenHolder.holder = address;
-  tokenHolder.balance = BigInt.zero();
+  tokenHolder.balance = BigDecimal.zero();
   tokenHolder.token = token.id;
   tokenHolder.save();
 
@@ -44,11 +50,10 @@ function createOrLoadTokenHolder(token: Token, address: Address): TokenHolder {
 
 function createTokenHolderBalance(
   tokenHolder: TokenHolder,
-  balance: BigInt,
+  balance: BigDecimal,
   block: BigInt,
   timestamp: BigInt,
   transaction: Bytes,
-  value: BigInt,
 ): TokenHolderBalance {
   const unixTimestamp = timestamp.toI64() * 1000;
 
@@ -60,7 +65,6 @@ function createTokenHolderBalance(
   tokenBalance.balance = balance;
   tokenBalance.transaction = transaction;
   tokenBalance.holder = tokenHolder.id;
-  tokenBalance.value = value;
   tokenBalance.save();
 
   return tokenBalance;
@@ -75,8 +79,15 @@ function updateTokenBalance(
   timestamp: BigInt,
   transaction: Bytes,
 ): void {
-  // Ignore null address
-  if (holderAddress.toHexString().toLowerCase() == "0x0000000000000000000000000000000000000000") {
+  const decimalValue = toDecimal(value);
+  log.debug("updateTokenBalance: token {}, holder {}, value {}, isSender {}", [
+    tokenAddress.toHexString(),
+    holderAddress.toHexString(),
+    decimalValue.toString(),
+    isSender ? "true" : "false",
+  ]);
+  if (arrayIncludesLoose(IGNORED_ADDRESSES, holderAddress.toHexString())) {
+    log.debug("holder {} is on ignore list. Skipping", [holderAddress.toHexString()]);
     return;
   }
 
@@ -85,13 +96,21 @@ function updateTokenBalance(
 
   // Get the token holder record
   const tokenHolder = createOrLoadTokenHolder(token, holderAddress);
+  log.debug("existing balance for holder {} = {}", [
+    holderAddress.toHexString(),
+    tokenHolder.balance.toString(),
+  ]);
 
   // Calculate the new balance
-  const adjustedValue = isSender ? BigInt.fromString("-1").times(value) : value;
+  const adjustedValue = isSender ? BigDecimal.fromString("-1").times(decimalValue) : decimalValue;
   const newBalance = tokenHolder.balance.plus(adjustedValue);
+  assert(
+    newBalance.ge(BigDecimal.zero()),
+    "Balance should be >= 0, but was " + newBalance.toString(),
+  );
 
   // Create a new balance record
-  createTokenHolderBalance(tokenHolder, newBalance, block, timestamp, transaction, adjustedValue);
+  createTokenHolderBalance(tokenHolder, newBalance, block, timestamp, transaction);
 
   // Update the TokenHolder
   tokenHolder.balance = newBalance;

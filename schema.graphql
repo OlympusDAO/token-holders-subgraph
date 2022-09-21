@@ -1,17 +1,16 @@
 type TokenHolderBalance @entity(immutable: true) {
   id: ID! # <tokenholder ID>-transaction
-  balance: BigInt!
+  balance: BigDecimal!
   block: BigInt!
   date: String! # ISO 8601 format
   holder: TokenHolder!
   timestamp: String! # Unix format
   transaction: Bytes!
-  value: BigInt!
 }
 
 type TokenHolder @entity {
   id: ID! # <token ID>-holder
-  balance: BigInt!
+  balance: BigDecimal!
   holder: Bytes!
   token: Token!
 }

@@ -43,13 +43,13 @@ export class TokenHolderBalance extends Entity {
     this.set("id", Value.fromString(value));
   }
 
-  get balance(): BigInt {
+  get balance(): BigDecimal {
     const value = this.get("balance");
-    return value!.toBigInt();
+    return value!.toBigDecimal();
   }
 
-  set balance(value: BigInt) {
-    this.set("balance", Value.fromBigInt(value));
+  set balance(value: BigDecimal) {
+    this.set("balance", Value.fromBigDecimal(value));
   }
 
   get block(): BigInt {
@@ -96,15 +96,6 @@ export class TokenHolderBalance extends Entity {
   set transaction(value: Bytes) {
     this.set("transaction", Value.fromBytes(value));
   }
-
-  get value(): BigInt {
-    const value = this.get("value");
-    return value!.toBigInt();
-  }
-
-  set value(value: BigInt) {
-    this.set("value", Value.fromBigInt(value));
-  }
 }
 
 export class TokenHolder extends Entity {
@@ -138,13 +129,13 @@ export class TokenHolder extends Entity {
     this.set("id", Value.fromString(value));
   }
 
-  get balance(): BigInt {
+  get balance(): BigDecimal {
     const value = this.get("balance");
-    return value!.toBigInt();
+    return value!.toBigDecimal();
   }
 
-  set balance(value: BigInt) {
-    this.set("balance", Value.fromBigInt(value));
+  set balance(value: BigDecimal) {
+    this.set("balance", Value.fromBigDecimal(value));
   }
 
   get holder(): Bytes {
