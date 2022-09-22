@@ -1,11 +1,20 @@
-type TokenHolderBalance @entity(immutable: true) {
+type TokenHolderTransfer @entity(immutable: true) {
   id: ID! # <tokenholder ID>-transaction
   balance: BigDecimal!
   block: BigInt!
   date: String! # ISO 8601 format
   holder: TokenHolder!
+  previousBalance: BigDecimal!
   timestamp: String! # Unix format
   transaction: Bytes!
+  value: BigDecimal!
+}
+
+type TokenHolderSnapshot @entity {
+  id: ID! # <token ID>-holder-<YYYY-MM-DD>
+  holder: TokenHolder!
+  date: String! # YYYY-MM-DD
+  balance: BigDecimal!
 }
 
 type TokenHolder @entity {
@@ -13,6 +22,7 @@ type TokenHolder @entity {
   balance: BigDecimal!
   holder: Bytes!
   token: Token!
+  latestSnapshot: ID
 }
 
 type Token @entity {

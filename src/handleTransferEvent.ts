@@ -1,8 +1,13 @@
 import { Address, BigDecimal, BigInt, Bytes, log } from "@graphprotocol/graph-ts";
 
 import { Transfer } from "../generated/gOHM/ERC20";
-import { Token, TokenHolder, TokenHolderBalance } from "../generated/schema";
+import { Token, TokenHolder, TokenHolderSnapshot, TokenHolderTransfer } from "../generated/schema";
 import { arrayIncludesLoose } from "./arrayHelper";
+import {
+  getDaysBetween,
+  getISO8601DateStringFromTimestamp,
+  getISO8601StringFromTimestamp,
+} from "./dateHelper";
 import { toDecimal } from "./decimalHelper";
 
 // Inspired by: https://github.com/xdaichain/token-holders-subgraph/blob/master/src/mapping.ts
@@ -10,11 +15,6 @@ import { toDecimal } from "./decimalHelper";
 const ERC20_GOHM = "0x0ab87046fbb341d058f17cbc4c1133f25a20a52f";
 const NULL = "0x0000000000000000000000000000000000000000";
 const IGNORED_ADDRESSES = [ERC20_GOHM, NULL];
-
-export const getISO8601StringFromTimestamp = (timestamp: i64): string => {
-  const date = new Date(timestamp);
-  return date.toISOString();
-};
 
 function createOrLoadToken(address: Address, name: string, blockchain: string): Token {
   const tokenId = `${name}/${blockchain}`;
@@ -30,6 +30,28 @@ function createOrLoadToken(address: Address, name: string, blockchain: string): 
   token.save();
 
   return token;
+}
+
+function createOrLoadTokenHolderSnapshot(
+  tokenHolder: TokenHolder,
+  timestamp: i64,
+  balance: BigDecimal,
+): TokenHolderSnapshot {
+  const date = getISO8601DateStringFromTimestamp(timestamp);
+  const snapshotId = `${tokenHolder.id}/${date}`;
+  const loadedSnapshot = TokenHolderSnapshot.load(snapshotId);
+  if (loadedSnapshot != null) {
+    return loadedSnapshot;
+  }
+
+  const snapshot = new TokenHolderSnapshot(snapshotId);
+  snapshot.holder = tokenHolder.id;
+  snapshot.date = date;
+  snapshot.balance = balance;
+
+  snapshot.save();
+
+  return snapshot;
 }
 
 function createOrLoadTokenHolder(token: Token, address: Address): TokenHolder {
@@ -48,26 +70,58 @@ function createOrLoadTokenHolder(token: Token, address: Address): TokenHolder {
   return tokenHolder;
 }
 
-function createTokenHolderBalance(
+function createTokenHolderTransfer(
   tokenHolder: TokenHolder,
   balance: BigDecimal,
+  value: BigDecimal,
   block: BigInt,
-  timestamp: BigInt,
+  timestamp: i64,
   transaction: Bytes,
-): TokenHolderBalance {
-  const unixTimestamp = timestamp.toI64() * 1000;
-
+): TokenHolderTransfer {
   const balanceId = `${tokenHolder.id}/${transaction.toHexString()}`;
-  const tokenBalance = new TokenHolderBalance(balanceId);
-  tokenBalance.block = block;
-  tokenBalance.timestamp = unixTimestamp.toString();
-  tokenBalance.date = getISO8601StringFromTimestamp(unixTimestamp);
+  const tokenBalance = new TokenHolderTransfer(balanceId);
   tokenBalance.balance = balance;
-  tokenBalance.transaction = transaction;
+  tokenBalance.block = block;
+  tokenBalance.date = getISO8601StringFromTimestamp(timestamp);
   tokenBalance.holder = tokenHolder.id;
+  tokenBalance.previousBalance = tokenHolder.balance;
+  tokenBalance.timestamp = timestamp.toString();
+  tokenBalance.transaction = transaction;
+  tokenBalance.value = value;
   tokenBalance.save();
 
   return tokenBalance;
+}
+
+function createTokenHolderSnapshots(
+  tokenHolder: TokenHolder,
+  balance: BigDecimal,
+  timestamp: i64,
+): void {
+  const newSnapshotDate = new Date(timestamp);
+
+  // Grab the latest snapshot
+  const latestSnapshotId = tokenHolder.latestSnapshot;
+  if (latestSnapshotId !== null) {
+    const latestSnapshot = TokenHolderSnapshot.load(latestSnapshotId);
+    if (latestSnapshot !== null) {
+      // Create snapshots for the days in between
+      const latestSnapshotDate = Date.parse(latestSnapshot.date);
+      const daysBetween = getDaysBetween(latestSnapshotDate, newSnapshotDate);
+
+      for (let i = 1; i < daysBetween; i++) {
+        const currentDate = new Date(latestSnapshotDate.getTime() + i * 24 * 60 * 60 * 1000);
+        createOrLoadTokenHolderSnapshot(tokenHolder, currentDate.getTime(), latestSnapshot.balance);
+      }
+    }
+  }
+
+  // Fetch or create the snapshot for the current day
+  const currentSnapshot = createOrLoadTokenHolderSnapshot(tokenHolder, timestamp, balance);
+
+  // Set latest snapshot
+  tokenHolder.latestSnapshot = currentSnapshot.id;
+  tokenHolder.save();
 }
 
 function updateTokenBalance(
@@ -80,6 +134,7 @@ function updateTokenBalance(
   transaction: Bytes,
 ): void {
   const decimalValue = toDecimal(value);
+  const unixTimestamp = timestamp.toI64() * 1000;
   log.debug("updateTokenBalance: token {}, holder {}, value {}, isSender {}", [
     tokenAddress.toHexString(),
     holderAddress.toHexString(),
@@ -110,7 +165,17 @@ function updateTokenBalance(
   );
 
   // Create a new balance record
-  createTokenHolderBalance(tokenHolder, newBalance, block, timestamp, transaction);
+  createTokenHolderTransfer(
+    tokenHolder,
+    newBalance,
+    adjustedValue,
+    block,
+    unixTimestamp,
+    transaction,
+  );
+
+  // Create balance snapshots
+  createTokenHolderSnapshots(tokenHolder, newBalance, unixTimestamp);
 
   // Update the TokenHolder
   tokenHolder.balance = newBalance;
