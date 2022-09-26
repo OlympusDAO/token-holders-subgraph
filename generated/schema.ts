@@ -10,7 +10,7 @@ import {
   Value,
   ValueKind} from "@graphprotocol/graph-ts";
 
-export class TokenHolderTransfer extends Entity {
+export class TokenHolderTransaction extends Entity {
   constructor(id: string) {
     super();
     this.set("id", Value.fromString(id));
@@ -18,19 +18,22 @@ export class TokenHolderTransfer extends Entity {
 
   save(): void {
     const id = this.get("id");
-    assert(id != null, "Cannot save TokenHolderTransfer entity without an ID");
+    assert(
+      id != null,
+      "Cannot save TokenHolderTransaction entity without an ID"
+    );
     if (id) {
       assert(
         id.kind == ValueKind.STRING,
-        `Entities of type TokenHolderTransfer must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`
+        `Entities of type TokenHolderTransaction must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`
       );
-      store.set("TokenHolderTransfer", id.toString(), this);
+      store.set("TokenHolderTransaction", id.toString(), this);
     }
   }
 
-  static load(id: string): TokenHolderTransfer | null {
-    return changetype<TokenHolderTransfer | null>(
-      store.get("TokenHolderTransfer", id)
+  static load(id: string): TokenHolderTransaction | null {
+    return changetype<TokenHolderTransaction | null>(
+      store.get("TokenHolderTransaction", id)
     );
   }
 
@@ -68,6 +71,15 @@ export class TokenHolderTransfer extends Entity {
 
   set date(value: string) {
     this.set("date", Value.fromString(value));
+  }
+
+  get type(): string {
+    const value = this.get("type");
+    return value!.toString();
+  }
+
+  set type(value: string) {
+    this.set("type", Value.fromString(value));
   }
 
   get holder(): string {

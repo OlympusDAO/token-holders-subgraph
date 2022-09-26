@@ -1,8 +1,15 @@
-type TokenHolderTransfer @entity(immutable: true) {
+enum TransactionType {
+  TRANSFER
+  MINT
+  BURN
+}
+
+type TokenHolderTransaction @entity(immutable: true) {
   id: ID! # <tokenholder ID>-transaction
   balance: BigDecimal!
   block: BigInt!
   date: String! # ISO 8601 format
+  type: TransactionType!
   holder: TokenHolder!
   previousBalance: BigDecimal!
   timestamp: String! # Unix format

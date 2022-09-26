@@ -1,7 +1,12 @@
 import { Address, BigDecimal, BigInt, Bytes, log } from "@graphprotocol/graph-ts";
 
-import { Transfer } from "../generated/gOHM/ERC20";
-import { Token, TokenHolder, TokenHolderSnapshot, TokenHolderTransfer } from "../generated/schema";
+import { BurnCall, MintCall, Transfer } from "../generated/gOHM/gOHM";
+import {
+  Token,
+  TokenHolder,
+  TokenHolderSnapshot,
+  TokenHolderTransaction,
+} from "../generated/schema";
 import { arrayIncludesLoose } from "./arrayHelper";
 import {
   getDaysBetween,
@@ -15,6 +20,10 @@ import { toDecimal } from "./decimalHelper";
 const ERC20_GOHM = "0x0ab87046fbb341d058f17cbc4c1133f25a20a52f";
 const NULL = "0x0000000000000000000000000000000000000000";
 const IGNORED_ADDRESSES = [ERC20_GOHM, NULL];
+
+const TYPE_TRANSFER = "TRANSFER";
+const TYPE_MINT = "MINT";
+const TYPE_BURN = "BURN";
 
 function createOrLoadToken(address: Address, name: string, blockchain: string): Token {
   const tokenId = `${name}/${blockchain}`;
@@ -77,9 +86,10 @@ function createTokenHolderTransfer(
   block: BigInt,
   timestamp: i64,
   transaction: Bytes,
-): TokenHolderTransfer {
+  type: string,
+): TokenHolderTransaction {
   const balanceId = `${tokenHolder.id}/${transaction.toHexString()}`;
-  const tokenBalance = new TokenHolderTransfer(balanceId);
+  const tokenBalance = new TokenHolderTransaction(balanceId);
   tokenBalance.balance = balance;
   tokenBalance.block = block;
   tokenBalance.date = getISO8601StringFromTimestamp(timestamp);
@@ -87,6 +97,7 @@ function createTokenHolderTransfer(
   tokenBalance.previousBalance = tokenHolder.balance;
   tokenBalance.timestamp = timestamp.toString();
   tokenBalance.transaction = transaction;
+  tokenBalance.type = type;
   tokenBalance.value = value;
   tokenBalance.save();
 
@@ -132,6 +143,7 @@ function updateTokenBalance(
   block: BigInt,
   timestamp: BigInt,
   transaction: Bytes,
+  transactionType: string,
 ): void {
   const decimalValue = toDecimal(value);
   const unixTimestamp = timestamp.toI64() * 1000;
@@ -172,6 +184,7 @@ function updateTokenBalance(
     block,
     unixTimestamp,
     transaction,
+    transactionType,
   );
 
   // Create balance snapshots
@@ -191,6 +204,7 @@ export function handleTransfer(event: Transfer): void {
     event.block.number,
     event.block.timestamp,
     event.transaction.hash,
+    TYPE_TRANSFER,
   );
   updateTokenBalance(
     event.address,
@@ -200,5 +214,32 @@ export function handleTransfer(event: Transfer): void {
     event.block.number,
     event.block.timestamp,
     event.transaction.hash,
+    TYPE_TRANSFER,
+  );
+}
+
+export function handleMint(call: MintCall): void {
+  updateTokenBalance(
+    call.to,
+    call.inputs._to,
+    call.inputs._amount,
+    false,
+    call.block.number,
+    call.block.timestamp,
+    call.transaction.hash,
+    TYPE_MINT,
+  );
+}
+
+export function handleBurn(call: BurnCall): void {
+  updateTokenBalance(
+    call.to,
+    call.inputs._from,
+    call.inputs._amount,
+    true,
+    call.block.number,
+    call.block.timestamp,
+    call.transaction.hash,
+    TYPE_BURN,
   );
 }

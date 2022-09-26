@@ -7,7 +7,7 @@ dataSources:
     network: mainnet
     source:
       address: "0x0ab87046fBb341D058F17CBC4c1133F25a20a52f"
-      abi: ERC20
+      abi: gOHM
       startBlock: 13674957
     mapping:
       kind: ethereum/events
@@ -16,9 +16,14 @@ dataSources:
       entities:
         - Transfer
       abis:
-        - name: ERC20
-          file: ./abis/ERC20.json
+        - name: gOHM
+          file: ./abis/gOHM.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
+      callHandlers:
+        - function: mint(address,uint256)
+          handler: handleMint
+        - function: burn(address,uint256)
+          handler: handleBurn
       file: ./src/handleEvent.ts
