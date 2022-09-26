@@ -18,12 +18,8 @@ dataSources:
       abis:
         - name: gOHM
           file: ./abis/gOHM.json
+      # Handling the transfer event is enough, as minting/burning will result in a transfer
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
-      callHandlers:
-        - function: mint(address,uint256)
-          handler: handleMint
-        - function: burn(address,uint256)
-          handler: handleBurn
       file: ./src/handleEvent.ts

@@ -147,12 +147,17 @@ function updateTokenBalance(
 ): void {
   const decimalValue = toDecimal(value);
   const unixTimestamp = timestamp.toI64() * 1000;
-  log.debug("updateTokenBalance: token {}, holder {}, value {}, isSender {}", [
-    tokenAddress.toHexString(),
-    holderAddress.toHexString(),
-    decimalValue.toString(),
-    isSender ? "true" : "false",
-  ]);
+  log.debug(
+    "updateTokenBalance: token {}, holder {}, value {}, isSender {}, type {}, transaction {}",
+    [
+      tokenAddress.toHexString(),
+      holderAddress.toHexString(),
+      decimalValue.toString(),
+      isSender ? "true" : "false",
+      transactionType,
+      transaction.toHexString(),
+    ],
+  );
   if (arrayIncludesLoose(IGNORED_ADDRESSES, holderAddress.toHexString())) {
     log.debug("holder {} is on ignore list. Skipping", [holderAddress.toHexString()]);
     return;
