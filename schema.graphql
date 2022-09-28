@@ -17,19 +17,11 @@ type TokenHolderTransaction @entity(immutable: true) {
   value: BigDecimal!
 }
 
-type TokenHolderSnapshot @entity {
-  id: ID! # <token ID>-holder-<YYYY-MM-DD>
-  holder: TokenHolder!
-  date: String! # YYYY-MM-DD
-  balance: BigDecimal!
-}
-
 type TokenHolder @entity {
   id: ID! # <token ID>-holder
   balance: BigDecimal!
   holder: Bytes!
   token: Token!
-  latestSnapshot: ID
 }
 
 type Token @entity {

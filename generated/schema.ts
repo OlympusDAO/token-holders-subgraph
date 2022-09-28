@@ -128,67 +128,6 @@ export class TokenHolderTransaction extends Entity {
   }
 }
 
-export class TokenHolderSnapshot extends Entity {
-  constructor(id: string) {
-    super();
-    this.set("id", Value.fromString(id));
-  }
-
-  save(): void {
-    const id = this.get("id");
-    assert(id != null, "Cannot save TokenHolderSnapshot entity without an ID");
-    if (id) {
-      assert(
-        id.kind == ValueKind.STRING,
-        `Entities of type TokenHolderSnapshot must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`
-      );
-      store.set("TokenHolderSnapshot", id.toString(), this);
-    }
-  }
-
-  static load(id: string): TokenHolderSnapshot | null {
-    return changetype<TokenHolderSnapshot | null>(
-      store.get("TokenHolderSnapshot", id)
-    );
-  }
-
-  get id(): string {
-    const value = this.get("id");
-    return value!.toString();
-  }
-
-  set id(value: string) {
-    this.set("id", Value.fromString(value));
-  }
-
-  get holder(): string {
-    const value = this.get("holder");
-    return value!.toString();
-  }
-
-  set holder(value: string) {
-    this.set("holder", Value.fromString(value));
-  }
-
-  get date(): string {
-    const value = this.get("date");
-    return value!.toString();
-  }
-
-  set date(value: string) {
-    this.set("date", Value.fromString(value));
-  }
-
-  get balance(): BigDecimal {
-    const value = this.get("balance");
-    return value!.toBigDecimal();
-  }
-
-  set balance(value: BigDecimal) {
-    this.set("balance", Value.fromBigDecimal(value));
-  }
-}
-
 export class TokenHolder extends Entity {
   constructor(id: string) {
     super();
@@ -245,23 +184,6 @@ export class TokenHolder extends Entity {
 
   set token(value: string) {
     this.set("token", Value.fromString(value));
-  }
-
-  get latestSnapshot(): string | null {
-    const value = this.get("latestSnapshot");
-    if (!value || value.kind == ValueKind.NULL) {
-      return null;
-    } else {
-      return value.toString();
-    }
-  }
-
-  set latestSnapshot(value: string | null) {
-    if (!value) {
-      this.unset("latestSnapshot");
-    } else {
-      this.set("latestSnapshot", Value.fromString(<string>value));
-    }
   }
 }
 
