@@ -9,6 +9,10 @@
     "gOHM": {
       "address": "0xc1863141dc1861122d5410fb5973951c82871d98",
       "startBlock": 7035328
+    },
+    "vOHM": {
+      "address": "0x7aef3bda16bbd12033d93c05df877d0f165f2214",
+      "startBlock": 7586695
     }
   }
 }
