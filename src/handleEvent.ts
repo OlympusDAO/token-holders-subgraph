@@ -3,7 +3,7 @@ import { Address, BigDecimal, BigInt, Bytes, log } from "@graphprotocol/graph-ts
 import { BurnCall, MintCall, Transfer } from "../generated/gOHM/gOHM";
 import { Token, TokenHolder, TokenHolderTransaction } from "../generated/schema";
 import { arrayIncludesLoose } from "./arrayHelper";
-import { getISO8601DateStringFromTimestamp, getISO8601StringFromTimestamp } from "./dateHelper";
+import { getISO8601StringFromTimestamp } from "./dateHelper";
 import { toDecimal } from "./decimalHelper";
 
 // Inspired by: https://github.com/xdaichain/token-holders-subgraph/blob/master/src/mapping.ts
@@ -56,8 +56,12 @@ function createTokenHolderTransaction(
   timestamp: i64,
   transaction: Bytes,
   type: string,
+  transactionLogIndex: BigInt,
 ): TokenHolderTransaction {
-  const balanceId = `${tokenHolder.id}/${transaction.toHexString()}`;
+  // The balanceId incorporates the transactionLogIndex, so that multiple transfers within a single transaction can be recorded
+  const balanceId = `${
+    tokenHolder.id
+  }/${transaction.toHexString()}/${transactionLogIndex.toString()}`;
   const tokenBalance = new TokenHolderTransaction(balanceId);
   tokenBalance.balance = balance;
   tokenBalance.block = block;
@@ -66,6 +70,7 @@ function createTokenHolderTransaction(
   tokenBalance.previousBalance = tokenHolder.balance;
   tokenBalance.timestamp = timestamp.toString();
   tokenBalance.transaction = transaction;
+  tokenBalance.transactionLogIndex = transactionLogIndex;
   tokenBalance.type = type;
   tokenBalance.value = value;
   tokenBalance.save();
@@ -82,11 +87,12 @@ function updateTokenBalance(
   timestamp: BigInt,
   transaction: Bytes,
   transactionType: string,
+  transactionLogIndex: BigInt,
 ): void {
   const decimalValue = toDecimal(value);
   const unixTimestamp = timestamp.toI64() * 1000;
   log.debug(
-    "updateTokenBalance: token {}, holder {}, value {}, isSender {}, type {}, transaction {}",
+    "updateTokenBalance: token {}, holder {}, value {}, isSender {}, type {}, transaction {}, logIndex {}",
     [
       tokenAddress.toHexString(),
       holderAddress.toHexString(),
@@ -94,6 +100,7 @@ function updateTokenBalance(
       isSender ? "true" : "false",
       transactionType,
       transaction.toHexString(),
+      transactionLogIndex.toString(),
     ],
   );
   if (arrayIncludesLoose(IGNORED_ADDRESSES, holderAddress.toHexString())) {
@@ -128,6 +135,7 @@ function updateTokenBalance(
     unixTimestamp,
     transaction,
     transactionType,
+    transactionLogIndex,
   );
 
   // Update the TokenHolder
@@ -145,6 +153,7 @@ export function handleTransfer(event: Transfer): void {
     event.block.timestamp,
     event.transaction.hash,
     TYPE_TRANSFER,
+    event.transactionLogIndex,
   );
   updateTokenBalance(
     event.address,
@@ -155,6 +164,7 @@ export function handleTransfer(event: Transfer): void {
     event.block.timestamp,
     event.transaction.hash,
     TYPE_TRANSFER,
+    event.transactionLogIndex,
   );
 }
 
@@ -168,6 +178,7 @@ export function handleMint(call: MintCall): void {
     call.block.timestamp,
     call.transaction.hash,
     TYPE_MINT,
+    BigInt.fromString("0"),
   );
 }
 
@@ -181,5 +192,6 @@ export function handleBurn(call: BurnCall): void {
     call.block.timestamp,
     call.transaction.hash,
     TYPE_BURN,
+    BigInt.fromString("0"),
   );
 }

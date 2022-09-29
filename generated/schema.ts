@@ -118,6 +118,15 @@ export class TokenHolderTransaction extends Entity {
     this.set("transaction", Value.fromBytes(value));
   }
 
+  get transactionLogIndex(): BigInt {
+    const value = this.get("transactionLogIndex");
+    return value!.toBigInt();
+  }
+
+  set transactionLogIndex(value: BigInt) {
+    this.set("transactionLogIndex", Value.fromBigInt(value));
+  }
+
   get value(): BigDecimal {
     const value = this.get("value");
     return value!.toBigDecimal();

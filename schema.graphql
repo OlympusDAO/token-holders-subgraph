@@ -5,7 +5,7 @@ enum TransactionType {
 }
 
 type TokenHolderTransaction @entity(immutable: true) {
-  id: ID! # <tokenholder ID>-transaction
+  id: ID! # <tokenholder ID>-transaction-logIndex
   balance: BigDecimal!
   block: BigInt!
   date: String! # ISO 8601 format
@@ -14,6 +14,7 @@ type TokenHolderTransaction @entity(immutable: true) {
   previousBalance: BigDecimal!
   timestamp: String! # Unix format
   transaction: Bytes!
+  transactionLogIndex: BigInt!
   value: BigDecimal!
 }
 
