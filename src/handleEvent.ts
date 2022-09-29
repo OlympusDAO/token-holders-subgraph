@@ -170,10 +170,10 @@ function updateTokenBalance(
   // Calculate the new balance
   const adjustedValue = isSender ? BigDecimal.fromString("-1").times(decimalValue) : decimalValue;
   const newBalance = tokenHolder.balance.plus(adjustedValue);
-  // assert(
-  //   newBalance.ge(BigDecimal.zero()),
-  //   "Balance should be >= 0, but was " + newBalance.toString(),
-  // );
+  assert(
+    newBalance.ge(BigDecimal.zero()),
+    "Balance should be >= 0, but was " + newBalance.toString(),
+  );
 
   // Create a new balance record
   createTokenHolderTransaction(
