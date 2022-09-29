@@ -15,7 +15,14 @@ const ERC20_OHM_V2 = "0x64aa3364f17a4d01c6f1751fd97c2bd3d7e7f1d5";
 const ERC20_SOHM_V2 = "0x04906695D6D12CF5459975d7C3C03356E4Ccd460";
 
 const NULL = "0x0000000000000000000000000000000000000000";
-const IGNORED_ADDRESSES = [ERC20_GOHM, NULL];
+const IGNORED_ADDRESSES = [
+  ERC20_GOHM,
+  ERC20_OHM_V1,
+  ERC20_OHM_V2,
+  ERC20_SOHM_V1,
+  ERC20_SOHM_V2,
+  NULL,
+];
 
 const TYPE_TRANSFER = "TRANSFER";
 const TYPE_MINT = "MINT";
@@ -37,11 +44,11 @@ function getTokenName(address: string): string {
 }
 
 const TOKEN_DECIMALS = new Map<string, string>();
-TOKENS.set(ERC20_GOHM.toLowerCase(), "18");
-TOKENS.set(ERC20_OHM_V1.toLowerCase(), "9");
-TOKENS.set(ERC20_SOHM_V1.toLowerCase(), "9");
-TOKENS.set(ERC20_OHM_V2.toLowerCase(), "9");
-TOKENS.set(ERC20_SOHM_V2.toLowerCase(), "9");
+TOKEN_DECIMALS.set(ERC20_GOHM.toLowerCase(), "18");
+TOKEN_DECIMALS.set(ERC20_OHM_V1.toLowerCase(), "9");
+TOKEN_DECIMALS.set(ERC20_SOHM_V1.toLowerCase(), "9");
+TOKEN_DECIMALS.set(ERC20_OHM_V2.toLowerCase(), "9");
+TOKEN_DECIMALS.set(ERC20_SOHM_V2.toLowerCase(), "9");
 
 function getTokenDecimals(address: string): number {
   if (!TOKEN_DECIMALS.has(address.toLowerCase())) {
@@ -124,6 +131,11 @@ function updateTokenBalance(
   transactionType: string,
   transactionLogIndex: BigInt,
 ): void {
+  if (arrayIncludesLoose(IGNORED_ADDRESSES, holderAddress.toHexString())) {
+    log.debug("holder {} is on ignore list. Skipping", [holderAddress.toHexString()]);
+    return;
+  }
+
   const tokenDecimals = getTokenDecimals(tokenAddress.toHexString());
   assert(tokenDecimals !== -1, "Could not find token decimals for " + tokenAddress.toHexString());
   const decimalValue = toDecimal(value, tokenDecimals);
@@ -141,10 +153,6 @@ function updateTokenBalance(
       transactionLogIndex.toString(),
     ],
   );
-  if (arrayIncludesLoose(IGNORED_ADDRESSES, holderAddress.toHexString())) {
-    log.debug("holder {} is on ignore list. Skipping", [holderAddress.toHexString()]);
-    return;
-  }
 
   const tokenName = getTokenName(tokenAddress.toHexString());
   assert(tokenName.length > 0, "Could not find token name for " + tokenAddress.toHexString()); // Fail loudly during indexing if we can't get the token name
