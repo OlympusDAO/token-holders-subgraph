@@ -36,6 +36,21 @@ function getTokenName(address: string): string {
   return TOKENS.get(address.toLowerCase());
 }
 
+const TOKEN_DECIMALS = new Map<string, string>();
+TOKENS.set(ERC20_GOHM.toLowerCase(), "18");
+TOKENS.set(ERC20_OHM_V1.toLowerCase(), "9");
+TOKENS.set(ERC20_SOHM_V1.toLowerCase(), "9");
+TOKENS.set(ERC20_OHM_V2.toLowerCase(), "9");
+TOKENS.set(ERC20_SOHM_V2.toLowerCase(), "9");
+
+function getTokenDecimals(address: string): number {
+  if (!TOKEN_DECIMALS.has(address.toLowerCase())) {
+    return -1;
+  }
+
+  return parseInt(TOKEN_DECIMALS.get(address.toLowerCase()));
+}
+
 function createOrLoadToken(address: Address, name: string, blockchain: string): Token {
   const tokenId = `${name}/${blockchain}`;
   const loadedToken = Token.load(tokenId);
@@ -109,7 +124,10 @@ function updateTokenBalance(
   transactionType: string,
   transactionLogIndex: BigInt,
 ): void {
-  const decimalValue = toDecimal(value);
+  const tokenDecimals = getTokenDecimals(tokenAddress.toHexString());
+  assert(tokenDecimals !== -1, "Could not find token decimals for " + tokenAddress.toHexString());
+  const decimalValue = toDecimal(value, tokenDecimals);
+
   const unixTimestamp = timestamp.toI64() * 1000;
   log.debug(
     "updateTokenBalance: token {}, holder {}, value {}, isSender {}, type {}, transaction {}, logIndex {}",
