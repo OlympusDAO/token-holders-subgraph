@@ -9,12 +9,32 @@ import { toDecimal } from "./decimalHelper";
 // Inspired by: https://github.com/xdaichain/token-holders-subgraph/blob/master/src/mapping.ts
 
 const ERC20_GOHM = "0x0ab87046fbb341d058f17cbc4c1133f25a20a52f";
+const ERC20_OHM_V1 = "0x383518188c0c6d7730d91b2c03a03c837814a899";
+const ERC20_SOHM_V1 = "0x04F2694C8fcee23e8Fd0dfEA1d4f5Bb8c352111F";
+const ERC20_OHM_V2 = "0x64aa3364f17a4d01c6f1751fd97c2bd3d7e7f1d5";
+const ERC20_SOHM_V2 = "0x04906695D6D12CF5459975d7C3C03356E4Ccd460";
+
 const NULL = "0x0000000000000000000000000000000000000000";
 const IGNORED_ADDRESSES = [ERC20_GOHM, NULL];
 
 const TYPE_TRANSFER = "TRANSFER";
 const TYPE_MINT = "MINT";
 const TYPE_BURN = "BURN";
+
+const TOKENS = new Map<string, string>();
+TOKENS.set(ERC20_GOHM.toLowerCase(), "gOHM");
+TOKENS.set(ERC20_OHM_V1.toLowerCase(), "OHM V1");
+TOKENS.set(ERC20_SOHM_V1.toLowerCase(), "sOHM V1");
+TOKENS.set(ERC20_OHM_V2.toLowerCase(), "OHM V2");
+TOKENS.set(ERC20_SOHM_V2.toLowerCase(), "sOHM V2");
+
+function getTokenName(address: string): string {
+  if (!TOKENS.has(address.toLowerCase())) {
+    return "";
+  }
+
+  return TOKENS.get(address.toLowerCase());
+}
 
 function createOrLoadToken(address: Address, name: string, blockchain: string): Token {
   const tokenId = `${name}/${blockchain}`;
@@ -108,8 +128,11 @@ function updateTokenBalance(
     return;
   }
 
+  const tokenName = getTokenName(tokenAddress.toHexString());
+  assert(tokenName.length > 0, "Could not find token name for " + tokenAddress.toHexString()); // Fail loudly during indexing if we can't get the token name
+
   // Get the parent token
-  const token = createOrLoadToken(tokenAddress, "gOHM", "Ethereum");
+  const token = createOrLoadToken(tokenAddress, tokenName, "Ethereum");
 
   // Get the token holder record
   const tokenHolder = createOrLoadTokenHolder(token, holderAddress);
@@ -121,10 +144,10 @@ function updateTokenBalance(
   // Calculate the new balance
   const adjustedValue = isSender ? BigDecimal.fromString("-1").times(decimalValue) : decimalValue;
   const newBalance = tokenHolder.balance.plus(adjustedValue);
-  assert(
-    newBalance.ge(BigDecimal.zero()),
-    "Balance should be >= 0, but was " + newBalance.toString(),
-  );
+  // assert(
+  //   newBalance.ge(BigDecimal.zero()),
+  //   "Balance should be >= 0, but was " + newBalance.toString(),
+  // );
 
   // Create a new balance record
   createTokenHolderTransaction(
