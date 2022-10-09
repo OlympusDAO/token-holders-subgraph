@@ -190,6 +190,26 @@ function updateTokenBalance(
   // Update the TokenHolder
   tokenHolder.balance = newBalance;
   tokenHolder.save();
+    
+  // The timestamp is in seconds, when we divide by 86400 we will get a integer representation for the day
+  let day = block.timestamp.toI32() / 86400;
+
+  // Token Holder id - Day
+  let _holderDailySnapshotId = tokenHolder.id + "-" + day.toString();
+
+  let _holderDailySnapshot = MarketDailySnapshot.load(_holderDailySnapshotId);
+
+  if (!_holderDailySnapshot) {
+    _holderDailySnapshot = new MarketDailySnapshot(_holderDailySnapshotId);
+  
+    _holderDailySnapshot.holder = tokenHolder.id 
+    _holderDailySnapshot.dayStart = day * 86400
+  }
+
+  _holderDailySnapshot.balance = tokenHolder.balance 
+  _holderDailySnapshot.blockNumber = block 
+  _holderDailySnapshot.timestamp = timestamp 
+  _holderDailySnapshot.save()
 }
 
 export function handleTransfer(event: Transfer): void {
