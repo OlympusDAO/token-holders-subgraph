@@ -51,6 +51,9 @@ type TokenHolder @entity {
   
   " Id of the Token "
   token: Token!
+  
+  " Sub entity to the daily snapshots for the TokenHolder "
+  dailySnapshots: [TokenHolder!]! @derivedFrom(field: "holder")
 }
 
 # Snapshot of the users balance as of a day period, multiple transactions can maintain a singular day record
@@ -60,7 +63,7 @@ type HolderDailySnapshot @entity {
   id: ID!
 
   " The Token Holder "
-  holder: Holder!
+  holder: TokenHolder!
 
   " Balance at the time of the snapshot "
   balance: BigDecimal!
