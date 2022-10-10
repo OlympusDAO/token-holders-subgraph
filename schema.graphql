@@ -5,29 +5,89 @@ enum TransactionType {
 }
 
 type TokenHolderTransaction @entity(immutable: true) {
-  id: ID! # <tokenholder ID>-transaction-logIndex
+  " <tokenholder ID>-transaction-logIndex "
+  id: ID! 
+  
+  " Normalized balance as a decimal "
   balance: BigDecimal!
+
+  " Block Number "
   block: BigInt!
-  date: String! # ISO 8601 format
+  
+  " Date in ISO 8601 format "
+  date: String! 
+  
+  " (TRANSFER/MINT/BURN) "
   type: TransactionType!
+  
+  " Token Holder sub-entity "
   holder: TokenHolder!
+  
+  " Balance prior to the Transfer " 
   previousBalance: BigDecimal!
-  timestamp: String! # Unix format
+  
+  " Time in unix format "
+  timestamp: String! 
+  
+  " Transaction Hash "
   transaction: Bytes!
+  
+  " Transaction Event Log Index "
   transactionLogIndex: BigInt!
+  
+  " Value of the Transfer "
   value: BigDecimal!
 }
 
 type TokenHolder @entity {
-  id: ID! # <token ID>-holder
+  " <token ID>-holder "
+  id: ID! 
+  
+  " Normalized balance as a decimal " 
   balance: BigDecimal!
+  
+  " Holder Wallet Address "
   holder: Bytes!
+  
+  " Id of the Token "
   token: Token!
+  
+  " Sub entity to the daily snapshots for the TokenHolder "
+  dailySnapshots: [TokenHolder!]! @derivedFrom(field: "holder")
+}
+
+# Snapshot of the users balance as of a day period, multiple transactions can maintain a singular day record
+# If a user does not have a transaction for the day no record will exist and the prior record can be relied upon.
+type HolderDailySnapshot @entity {
+  " { Holder ID }-{ Unix Day (timestamp/86400) } "
+  id: ID!
+
+  " The Token Holder "
+  holder: TokenHolder!
+
+  " Balance at the time of the snapshot "
+  balance: BigDecimal!
+
+  " Block number of this snapshot "
+  blockNumber: BigInt!
+
+  " Timestamp of this snapshot "
+  timestamp: BigInt!
+
+  " Day Start in Unix "
+  dayStart: BigInt!
 }
 
 type Token @entity {
-  id: ID! # token-blockchain
+  " token-blockchain "
+  id: ID! 
+  
+  " Contract Address for the Token "
   address: Bytes!
+  
+  " Blockchain Name "
   blockchain: String!
+  
+  " Token Name "
   name: String!
 }
