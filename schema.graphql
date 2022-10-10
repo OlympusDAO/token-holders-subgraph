@@ -18,11 +18,27 @@ type TokenHolderTransaction @entity(immutable: true) {
   value: BigDecimal!
 }
 
+type TokenHolderBalance @entity {
+  # One per day
+  id: ID! # <tokenholder ID>-<YYYY-MM-DD>
+  date: String! # YYYY-MM-DD
+  holder: TokenHolder!
+  balance: BigDecimal!
+}
+
 type TokenHolder @entity {
   id: ID! # <token ID>-holder
   balance: BigDecimal!
   holder: Bytes!
   token: Token!
+  balances: [TokenHolderBalance!]! @derivedFrom(field: "holder")
+}
+
+type TokenDailySnapshot @entity {
+  id: ID! # <token ID>/<YYYY-MM-DD>
+  date: String! # YYYY-MM-DD
+  token: Token!
+  balancesList: [String!]! # TokenHolderBalance IDs
 }
 
 type Token @entity {
@@ -30,4 +46,5 @@ type Token @entity {
   address: Bytes!
   blockchain: String!
   name: String!
+  dailySnapshots: [TokenDailySnapshot!]! @derivedFrom(field: "token")
 }

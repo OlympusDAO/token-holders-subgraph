@@ -137,6 +137,67 @@ export class TokenHolderTransaction extends Entity {
   }
 }
 
+export class TokenHolderBalance extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    const id = this.get("id");
+    assert(id != null, "Cannot save TokenHolderBalance entity without an ID");
+    if (id) {
+      assert(
+        id.kind == ValueKind.STRING,
+        `Entities of type TokenHolderBalance must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`
+      );
+      store.set("TokenHolderBalance", id.toString(), this);
+    }
+  }
+
+  static load(id: string): TokenHolderBalance | null {
+    return changetype<TokenHolderBalance | null>(
+      store.get("TokenHolderBalance", id)
+    );
+  }
+
+  get id(): string {
+    const value = this.get("id");
+    return value!.toString();
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get date(): string {
+    const value = this.get("date");
+    return value!.toString();
+  }
+
+  set date(value: string) {
+    this.set("date", Value.fromString(value));
+  }
+
+  get holder(): string {
+    const value = this.get("holder");
+    return value!.toString();
+  }
+
+  set holder(value: string) {
+    this.set("holder", Value.fromString(value));
+  }
+
+  get balance(): BigDecimal {
+    const value = this.get("balance");
+    return value!.toBigDecimal();
+  }
+
+  set balance(value: BigDecimal) {
+    this.set("balance", Value.fromBigDecimal(value));
+  }
+}
+
 export class TokenHolder extends Entity {
   constructor(id: string) {
     super();
@@ -193,6 +254,76 @@ export class TokenHolder extends Entity {
 
   set token(value: string) {
     this.set("token", Value.fromString(value));
+  }
+
+  get balances(): Array<string> {
+    const value = this.get("balances");
+    return value!.toStringArray();
+  }
+
+  set balances(value: Array<string>) {
+    this.set("balances", Value.fromStringArray(value));
+  }
+}
+
+export class TokenDailySnapshot extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    const id = this.get("id");
+    assert(id != null, "Cannot save TokenDailySnapshot entity without an ID");
+    if (id) {
+      assert(
+        id.kind == ValueKind.STRING,
+        `Entities of type TokenDailySnapshot must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`
+      );
+      store.set("TokenDailySnapshot", id.toString(), this);
+    }
+  }
+
+  static load(id: string): TokenDailySnapshot | null {
+    return changetype<TokenDailySnapshot | null>(
+      store.get("TokenDailySnapshot", id)
+    );
+  }
+
+  get id(): string {
+    const value = this.get("id");
+    return value!.toString();
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get date(): string {
+    const value = this.get("date");
+    return value!.toString();
+  }
+
+  set date(value: string) {
+    this.set("date", Value.fromString(value));
+  }
+
+  get token(): string {
+    const value = this.get("token");
+    return value!.toString();
+  }
+
+  set token(value: string) {
+    this.set("token", Value.fromString(value));
+  }
+
+  get balancesList(): Array<string> {
+    const value = this.get("balancesList");
+    return value!.toStringArray();
+  }
+
+  set balancesList(value: Array<string>) {
+    this.set("balancesList", Value.fromStringArray(value));
   }
 }
 
@@ -252,5 +383,14 @@ export class Token extends Entity {
 
   set name(value: string) {
     this.set("name", Value.fromString(value));
+  }
+
+  get dailySnapshots(): Array<string> {
+    const value = this.get("dailySnapshots");
+    return value!.toStringArray();
+  }
+
+  set dailySnapshots(value: Array<string>) {
+    this.set("dailySnapshots", Value.fromStringArray(value));
   }
 }

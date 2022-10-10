@@ -1,9 +1,9 @@
 import { Address, BigDecimal, BigInt, Bytes, log } from "@graphprotocol/graph-ts";
 
 import { BurnCall, MintCall, Transfer } from "../generated/gOHM/gOHM";
-import { Token, TokenHolder, TokenHolderTransaction } from "../generated/schema";
+import { Token, TokenDailySnapshot, TokenHolder, TokenHolderBalance, TokenHolderTransaction } from "../generated/schema";
 import { arrayIncludesLoose } from "./arrayHelper";
-import { getISO8601StringFromTimestamp } from "./dateHelper";
+import { getISO8601DateStringFromTimestamp, getISO8601StringFromTimestamp } from "./dateHelper";
 import { toDecimal } from "./decimalHelper";
 
 // Inspired by: https://github.com/xdaichain/token-holders-subgraph/blob/master/src/mapping.ts
@@ -90,6 +90,22 @@ function createOrLoadTokenHolder(token: Token, address: Address): TokenHolder {
   return tokenHolder;
 }
 
+function createOrLoadTokenDailySnapshot(timestamp: i64, token: Token): TokenDailySnapshot {
+  const dateString = getISO8601DateStringFromTimestamp(timestamp);
+  const snapshotId = `${token.id}/${dateString}`;
+  const loadedSnapshot = TokenDailySnapshot.load(snapshotId);
+  if (loadedSnapshot !== null) {
+    return loadedSnapshot;
+  }
+
+  const snapshot = new TokenDailySnapshot(snapshotId);
+  snapshot.date = dateString;
+  snapshot.balancesList = [];
+  snapshot.save();
+
+  return snapshot;
+}
+
 function createTokenHolderTransaction(
   tokenHolder: TokenHolder,
   balance: BigDecimal,
@@ -101,26 +117,47 @@ function createTokenHolderTransaction(
   transactionLogIndex: BigInt,
 ): TokenHolderTransaction {
   // The balanceId incorporates the transactionLogIndex, so that multiple transfers within a single transaction can be recorded
-  const balanceId = `${
+  const transactionId = `${
     tokenHolder.id
-  }/${transaction.toHexString()}/${transactionLogIndex.toString()}`;
-  const tokenBalance = new TokenHolderTransaction(balanceId);
-  tokenBalance.balance = balance;
-  tokenBalance.block = block;
-  tokenBalance.date = getISO8601StringFromTimestamp(timestamp);
-  tokenBalance.holder = tokenHolder.id;
-  tokenBalance.previousBalance = tokenHolder.balance;
-  tokenBalance.timestamp = timestamp.toString();
-  tokenBalance.transaction = transaction;
-  tokenBalance.transactionLogIndex = transactionLogIndex;
-  tokenBalance.type = type;
-  tokenBalance.value = value;
-  tokenBalance.save();
+    }/${transaction.toHexString()}/${transactionLogIndex.toString()}`;
+  log.debug("transaction id = {}", [transactionId]);
+  const transactionRecord = new TokenHolderTransaction(transactionId);
+  transactionRecord.balance = balance;
+  transactionRecord.block = block;
+  transactionRecord.date = getISO8601StringFromTimestamp(timestamp);
+  transactionRecord.holder = tokenHolder.id;
+  transactionRecord.previousBalance = tokenHolder.balance;
+  transactionRecord.timestamp = timestamp.toString();
+  transactionRecord.transaction = transaction;
+  transactionRecord.transactionLogIndex = transactionLogIndex;
+  transactionRecord.type = type;
+  transactionRecord.value = value;
+  transactionRecord.save();
 
-  return tokenBalance;
+  return transactionRecord;
 }
 
-function updateTokenBalance(
+function createTokenHolderBalance(
+  tokenHolder: TokenHolder,
+  balance: BigDecimal,
+  timestamp: i64,
+): TokenHolderBalance {
+  const balanceId = `${tokenHolder.id}/${getISO8601DateStringFromTimestamp(timestamp)}`;
+  const loadedBalance = TokenHolderBalance.load(balanceId);
+  if (loadedBalance) {
+    return loadedBalance;
+  }
+
+  const balanceRecord = new TokenHolderBalance(balanceId);
+  balanceRecord.date = getISO8601DateStringFromTimestamp(timestamp);
+  balanceRecord.holder = tokenHolder.id;
+  balanceRecord.balance = balance;
+  balanceRecord.save();
+
+  return balanceRecord;
+}
+
+export function updateTokenBalance(
   tokenAddress: Address,
   holderAddress: Address,
   value: BigInt,
@@ -175,7 +212,7 @@ function updateTokenBalance(
     "Balance should be >= 0, but was " + newBalance.toString(),
   );
 
-  // Create a new balance record
+  // Create a new transaction record
   createTokenHolderTransaction(
     tokenHolder,
     newBalance,
@@ -190,6 +227,11 @@ function updateTokenBalance(
   // Update the TokenHolder
   tokenHolder.balance = newBalance;
   tokenHolder.save();
+
+  // Create or update the balance
+  const balanceRecord = createTokenHolderBalance(tokenHolder, newBalance, unixTimestamp);
+  balanceRecord.balance = newBalance;
+  balanceRecord.save();
 }
 
 export function handleTransfer(event: Transfer): void {
