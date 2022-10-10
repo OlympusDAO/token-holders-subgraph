@@ -90,9 +90,19 @@ function createOrLoadTokenHolder(token: Token, address: Address): TokenHolder {
   return tokenHolder;
 }
 
-function createOrLoadTokenDailySnapshot(timestamp: i64, token: Token): TokenDailySnapshot {
+function getDailySnapshotId(timestamp: i64, token: Token): string {
   const dateString = getISO8601DateStringFromTimestamp(timestamp);
-  const snapshotId = `${token.id}/${dateString}`;
+  return `${token.id}/${dateString}`;
+}
+
+function getDailySnapshot(timestamp: i64, token: Token): TokenDailySnapshot | null {
+  return TokenDailySnapshot.load(getDailySnapshotId(timestamp, token));
+}
+
+function createOrLoadTokenDailySnapshot(timestamp: i64, token: Token): TokenDailySnapshot {
+  const snapshotId = getDailySnapshotId(timestamp, token);
+  const dateString = getISO8601DateStringFromTimestamp(timestamp);
+  
   const loadedSnapshot = TokenDailySnapshot.load(snapshotId);
   if (loadedSnapshot !== null) {
     return loadedSnapshot;
@@ -121,7 +131,6 @@ function createTokenHolderTransaction(
   const transactionId = `${
     tokenHolder.id
     }/${transaction.toHexString()}/${transactionLogIndex.toString()}`;
-  log.debug("transaction id = {}", [transactionId]);
   const transactionRecord = new TokenHolderTransaction(transactionId);
   transactionRecord.balance = balance;
   transactionRecord.block = block;
@@ -229,6 +238,11 @@ export function updateTokenBalance(
   tokenHolder.balance = newBalance;
   tokenHolder.save();
 
+  // We don't bother to save 0 balances
+  if (newBalance.equals(BigDecimal.zero())) {
+    return;
+  }
+
   // Create or update the balance
   const balanceRecord = createTokenHolderBalance(tokenHolder, newBalance, unixTimestamp);
   balanceRecord.balance = newBalance;
@@ -246,6 +260,49 @@ export function updateTokenBalance(
 
   dailySnapshot.balancesList = balancesList;
   dailySnapshot.save();
+}
+
+function stringArrayToMap(array: string[]): Map<string, string> {
+  const newMap = new Map<string, string>();
+  for (let i = 0; i < array.length; i++) {
+    newMap.set(array[i], array[i]);
+  }
+
+  return newMap;
+}
+
+export function backfill(timestamp: BigInt, token: Token): void {
+  const unixTimestamp = timestamp.toI64() * 1000;
+  const dayMilliseconds = 86400 * 1000;
+
+  // Grab the previous daily snapshot
+  const previousSnapshot = createOrLoadTokenDailySnapshot(unixTimestamp - dayMilliseconds, token);
+  const previousSnapshotBalanceList = previousSnapshot ? previousSnapshot.balancesList : [];
+
+  // Grab the daily snapshot
+  const currentSnapshot = getDailySnapshot(unixTimestamp, token);
+  
+  // If there's no daily snapshot, we copy the balance list from the previous day
+  if (!currentSnapshot) {
+    const newSnapshot = createOrLoadTokenDailySnapshot(unixTimestamp, token);
+    newSnapshot.balancesList = previousSnapshotBalanceList;
+    newSnapshot.save();
+  }
+  else {
+    const balanceMap = stringArrayToMap(currentSnapshot.balancesList);
+
+    for (let i = 0; i < previousSnapshotBalanceList.length; i++) {
+      const currentBalance = previousSnapshotBalanceList[i];
+      if (balanceMap.has(currentBalance)) {
+        continue;
+      }
+
+      balanceMap.set(currentBalance, currentBalance);
+    }
+
+    currentSnapshot.balancesList = balanceMap.values();
+    currentSnapshot.save();
+  }
 }
 
 export function handleTransfer(event: Transfer): void {
