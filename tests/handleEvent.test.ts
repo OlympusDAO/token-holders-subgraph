@@ -2,7 +2,7 @@ import { assert, beforeEach, clearStore, describe, test } from "matchstick-as";
 import { Transfer } from "../generated/gOHM/gOHM";
 import { Address, BigDecimal, BigInt, Bytes, ethereum, log } from "@graphprotocol/graph-ts";
 import { updateTokenBalance } from "../src/handleEvent";
-import { Token, TokenHolder, TokenHolderBalance, TokenHolderTransaction } from "../generated/schema";
+import { Token, TokenDailySnapshot, TokenHolder, TokenHolderBalance, TokenHolderTransaction } from "../generated/schema";
 import { toBigInt } from "../src/decimalHelper";
 
 const ERC20_GOHM = "0x0ab87046fbb341d058f17cbc4c1133f25a20a52f";
@@ -33,6 +33,20 @@ function getTransactionLogIndex(): BigInt {
     return BigInt.fromString("1");
 }
 
+function stringArrayEquals(a: string[], b: string[]): boolean {
+    if (a.length !== b.length) {
+        return false;
+    }
+
+    for (let i = 0; i < a.length; i++) {
+        if (a[i] != b[i]) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 describe("transfer", () => {
     beforeEach(() => {
         clearStore();
@@ -44,6 +58,7 @@ describe("transfer", () => {
 
         // Token should be created
         const token = Token.load("gOHM/Ethereum");
+        const tokenId = token ? token.id : "";
         log.debug("token should not be null", []);
         assert.assertNotNull(token);
 
@@ -60,9 +75,14 @@ describe("transfer", () => {
 
         // Token Holder Balance should be created
         const tokenHolderBalance = TokenHolderBalance.load(`${tokenHolder ? tokenHolder.id : ""}/2022-10-09`);
+        const tokenHolderBalanceId = tokenHolderBalance ? tokenHolderBalance.id : "";
         log.debug("token holder balance should not be null", []);
         assert.assertNotNull(tokenHolderBalance);
         assert.stringEquals(value.toString(), tokenHolderBalance ? tokenHolderBalance.balance.toString() : "");
+        
+        // Token balances updated
+        const tokenDailySnapshot = TokenDailySnapshot.load(`${tokenId}/2022-10-09`);
+        assert.assertTrue(stringArrayEquals([tokenHolderBalanceId], tokenDailySnapshot ? tokenDailySnapshot.balancesList : []));
     });
 
     test("multiple transfers, single day", () => {
@@ -72,6 +92,12 @@ describe("transfer", () => {
         // Second transaction
         const valueTwo = BigDecimal.fromString("1.2");
         updateTokenBalance(getTokenAddress(), getHolderAddress(), toBigInt(valueTwo), false, getBlock(), getTimestamp(), getTransaction(), "TRANSFER", BigInt.fromString("100"));
+
+        // Token should be created
+        const token = Token.load("gOHM/Ethereum");
+        const tokenId = token ? token.id : "";
+        log.debug("token should not be null", []);
+        assert.assertNotNull(token);
 
         // Token Holder should be created
         const tokenHolder = TokenHolder.load(`gOHM/Ethereum/${getHolderAddress().toHexString()}`);
@@ -86,9 +112,15 @@ describe("transfer", () => {
 
         // Token Holder Balance should be updated
         const tokenHolderBalance = TokenHolderBalance.load(`${tokenHolder ? tokenHolder.id : ""}/2022-10-09`);
+        const tokenHolderBalanceId = tokenHolderBalance ? tokenHolderBalance.id : "";
         log.debug("token holder balance should not be null", []);
         assert.assertNotNull(tokenHolderBalance);
         assert.stringEquals(value.plus(valueTwo).toString(), tokenHolderBalance ? tokenHolderBalance.balance.toString() : "");
+
+        // Token balances updated
+        log.debug("token daily snapshot should be updated", []);
+        const tokenDailySnapshot = TokenDailySnapshot.load(`${tokenId}/2022-10-09`);
+        assert.assertTrue(stringArrayEquals([tokenHolderBalanceId], tokenDailySnapshot ? tokenDailySnapshot.balancesList : []));
     });
 
     test("multiple transfers, multiple days", () => {
@@ -101,6 +133,12 @@ describe("transfer", () => {
         const blockTwo = "15717471";
         const transactionTwo = "0x74e3c96ad72f989ac693e04455411c194495a5502920c453428c7edcee95ad21";
         updateTokenBalance(getTokenAddress(), getHolderAddress(), toBigInt(valueTwo), false, BigInt.fromString(blockTwo), BigInt.fromString(timestampTwo), Bytes.fromHexString(transactionTwo), "TRANSFER", getTransactionLogIndex());
+
+        // Token should be created
+        const token = Token.load("gOHM/Ethereum");
+        const tokenId = token ? token.id : "";
+        log.debug("token should not be null", []);
+        assert.assertNotNull(token);
 
         // Token Holder should be created
         const tokenHolder = TokenHolder.load(`gOHM/Ethereum/${getHolderAddress().toHexString()}`);
@@ -115,12 +153,24 @@ describe("transfer", () => {
 
         // Token Holder Balance should be updated
         const tokenHolderBalance = TokenHolderBalance.load(`${tokenHolder ? tokenHolder.id : ""}/2022-10-10`);
+        const tokenHolderBalanceId = tokenHolderBalance ? tokenHolderBalance.id : "";
         log.debug("token holder balance should not be null", []);
         assert.assertNotNull(tokenHolderBalance);
         assert.stringEquals(value.plus(valueTwo).toString(), tokenHolderBalance ? tokenHolderBalance.balance.toString() : "");
+        
+        // Token balances updated
+        log.debug("token daily snapshot should be updated", []);
+        const tokenDailySnapshot = TokenDailySnapshot.load(`${tokenId}/2022-10-10`);
+        assert.assertTrue(stringArrayEquals([tokenHolderBalanceId], tokenDailySnapshot ? tokenDailySnapshot.balancesList : []));
     });
-
-    // backfill
 });
 
-// calculates daily snapshots
+describe("backfill", () => {
+    beforeEach(() => {
+        clearStore();
+    });
+
+    test("backfills for previous day", () => {
+        throw new Error("");
+    });
+});

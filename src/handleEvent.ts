@@ -100,6 +100,7 @@ function createOrLoadTokenDailySnapshot(timestamp: i64, token: Token): TokenDail
 
   const snapshot = new TokenDailySnapshot(snapshotId);
   snapshot.date = dateString;
+  snapshot.token = token.id;
   snapshot.balancesList = [];
   snapshot.save();
 
@@ -232,6 +233,19 @@ export function updateTokenBalance(
   const balanceRecord = createTokenHolderBalance(tokenHolder, newBalance, unixTimestamp);
   balanceRecord.balance = newBalance;
   balanceRecord.save();
+
+  // Create or uppdate the daily snapshot
+  const dailySnapshot = createOrLoadTokenDailySnapshot(unixTimestamp, token);
+  const balancesList = dailySnapshot.balancesList;
+
+  // Only add balanceRecord if it doesn't exist
+  // TODO consider a more efficient approach
+  if (!balancesList.includes(balanceRecord.id)) {
+    balancesList.push(balanceRecord.id);
+  }
+
+  dailySnapshot.balancesList = balancesList;
+  dailySnapshot.save();
 }
 
 export function handleTransfer(event: Transfer): void {
