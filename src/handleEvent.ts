@@ -422,23 +422,22 @@ export function handleBurn(call: BurnCall): void {
   );
 }
 
-export function handleGOhmBlock(block: ethereum.Block): void {
-  // TODO perform at 00.01?
-  // Do backfill every hour
-  if (!block.number.mod(BigInt.fromString("3600")).equals(BigInt.zero())) {
+function handleBlock(block: ethereum.Block, token: Token): void {
+  // Perform backfill at 00:01
+  const date = new Date(block.timestamp.toI64() * 1000);
+  if (!(date.getUTCHours() === 0 && date.getUTCMinutes() === 1)) {
     return;
   }
 
-  const token = createOrLoadToken(Address.fromString(ERC20_GOHM), getTokenName(ERC20_GOHM), "Ethereum");
   backfill(block.timestamp, token);
 }
 
-export function handleOhmV2Block(block: ethereum.Block): void {
-  // Do backfill every hour
-  if (!block.number.mod(BigInt.fromString("3600")).equals(BigInt.zero())) {
-    return;
-  }
+export function handleGOhmBlock(block: ethereum.Block): void {
+  const token = createOrLoadToken(Address.fromString(ERC20_GOHM), getTokenName(ERC20_GOHM), "Ethereum");
+  handleBlock(block, token);
+}
 
+export function handleOhmV2Block(block: ethereum.Block): void {
   const token = createOrLoadToken(Address.fromString(ERC20_OHM_V2), getTokenName(ERC20_OHM_V2), "Ethereum");
-  backfill(block.timestamp, token);
+  handleBlock(block, token);
 }
