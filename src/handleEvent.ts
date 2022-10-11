@@ -151,11 +151,27 @@ function getHolderBalanceId(timestamp: i64, tokenHolder: TokenHolder): string {
   return `${tokenHolder.id}/${getISO8601DateStringFromTimestamp(timestamp)}`;
 }
 
+function getHolderBalanceIdOnDate(balanceId: string, timestamp: i64): string {
+  // Strip the date and separator (/YYYY-MM-DD) from the existing balance id
+  const strippedBalanceId = balanceId.slice(0, -11);
+  return `${strippedBalanceId}/${getISO8601DateStringFromTimestamp(timestamp)}`;
+}
+
 function getHolderBalance(timestamp: i64, tokenHolder: TokenHolder): TokenHolderBalance | null {
   return TokenHolderBalance.load(getHolderBalanceId(timestamp, tokenHolder));
 }
 
-function createTokenHolderBalance(
+function createTokenHolderBalance(balanceId: string, date: string, holderId: string, balance: BigDecimal): TokenHolderBalance {
+  const balanceRecord = new TokenHolderBalance(balanceId);
+  balanceRecord.date = date;
+  balanceRecord.holder = holderId;
+  balanceRecord.balance = balance;
+  balanceRecord.save();
+
+  return balanceRecord;
+}
+
+function createOrLoadTokenHolderBalance(
   tokenHolder: TokenHolder,
   balance: BigDecimal,
   timestamp: i64,
@@ -166,13 +182,7 @@ function createTokenHolderBalance(
     return loadedBalance;
   }
 
-  const balanceRecord = new TokenHolderBalance(balanceId);
-  balanceRecord.date = getISO8601DateStringFromTimestamp(timestamp);
-  balanceRecord.holder = tokenHolder.id;
-  balanceRecord.balance = balance;
-  balanceRecord.save();
-
-  return balanceRecord;
+  return createTokenHolderBalance(balanceId, getISO8601DateStringFromTimestamp(timestamp), tokenHolder.id, balance);
 }
 
 export function updateTokenBalance(
@@ -270,7 +280,7 @@ export function updateTokenBalance(
   }
 
   // Create or update the balance
-  const balanceRecord = createTokenHolderBalance(tokenHolder, newBalance, unixTimestamp);
+  const balanceRecord = createOrLoadTokenHolderBalance(tokenHolder, newBalance, unixTimestamp);
   balanceRecord.balance = newBalance;
   balanceRecord.save();
 
@@ -299,6 +309,7 @@ function stringArrayToMap(array: string[]): Map<string, string> {
 
 export function backfill(timestamp: BigInt, token: Token): void {
   const unixTimestamp = timestamp.toI64() * 1000;
+  log.info("Performing backfill at date {} for token {}", [getISO8601DateStringFromTimestamp(unixTimestamp), token.name]);
   const dayMilliseconds = 86400 * 1000;
 
   // Grab the previous daily snapshot
@@ -310,20 +321,47 @@ export function backfill(timestamp: BigInt, token: Token): void {
   
   // If there's no daily snapshot, we copy the balance list from the previous day
   if (!currentSnapshot) {
+    log.debug("No snapshot for the current day. Copying from the previous day.", []);
     const newSnapshot = createOrLoadTokenDailySnapshot(unixTimestamp, token);
-    newSnapshot.balancesList = previousSnapshotBalanceList;
+    const newSnapshotBalancesList: string[] = [];
+
+    for (let i = 0; i < previousSnapshotBalanceList.length; i++) {
+      const previousBalanceId = previousSnapshotBalanceList[i];
+      const previousBalance = TokenHolderBalance.load(previousBalanceId);
+      if (!previousBalance) {
+        throw new Error("Expected to find TokenHolderBalance with id " + previousBalanceId + ", but could not");
+      }
+
+      // previousBalanceId contains the date, so we need to convert to today's date
+      const newBalanceId = getHolderBalanceIdOnDate(previousBalanceId, unixTimestamp);
+      createTokenHolderBalance(newBalanceId, getISO8601DateStringFromTimestamp(unixTimestamp), previousBalance.holder, previousBalance.balance);
+      newSnapshotBalancesList.push(newBalanceId);
+    }
+
+    newSnapshot.balancesList = newSnapshotBalancesList;
     newSnapshot.save();
   }
+  // Otherwise anything missing from the previous day is added
+  // This is because the snapshot could be created from a transaction before backfill is performed
   else {
+    log.debug("Snapshot exists. Performing backfill from previous day.", []);
     const balanceMap = stringArrayToMap(currentSnapshot.balancesList);
 
     for (let i = 0; i < previousSnapshotBalanceList.length; i++) {
-      const currentBalance = previousSnapshotBalanceList[i];
-      if (balanceMap.has(currentBalance)) {
+      const previousBalanceId = previousSnapshotBalanceList[i];
+      const previousBalance = TokenHolderBalance.load(previousBalanceId);
+      if (!previousBalance) {
+        throw new Error("Expected to find TokenHolderBalance with id " + previousBalanceId + ", but could not");
+      }
+
+      const newBalanceId = getHolderBalanceIdOnDate(previousBalanceId, unixTimestamp);
+      // If there is already a balance for today, no need for action
+      if (balanceMap.has(newBalanceId)) {
         continue;
       }
 
-      balanceMap.set(currentBalance, currentBalance);
+      createTokenHolderBalance(newBalanceId, getISO8601DateStringFromTimestamp(unixTimestamp), previousBalance.holder, previousBalance.balance);
+      balanceMap.set(newBalanceId, newBalanceId);
     }
 
     currentSnapshot.balancesList = balanceMap.values();
@@ -385,6 +423,7 @@ export function handleBurn(call: BurnCall): void {
 }
 
 export function handleGOhmBlock(block: ethereum.Block): void {
+  // TODO perform at 00.01?
   // Do backfill every hour
   if (!block.number.mod(BigInt.fromString("3600")).equals(BigInt.zero())) {
     return;
