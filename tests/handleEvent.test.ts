@@ -85,7 +85,7 @@ describe("transfer", () => {
         assert.assertTrue(stringArrayEquals([tokenHolderBalanceId], tokenDailySnapshot ? tokenDailySnapshot.balancesList : []));
     });
 
-    test("0 balance not recorded", () => {
+    test("0 balance recorded", () => {
         const value = BigDecimal.fromString("0");
         updateTokenBalance(getTokenAddress(), getHolderAddress(), toBigInt(value), false, getBlock(), getTimestamp(), getTransaction(), "TRANSFER", getTransactionLogIndex());
 
@@ -106,14 +106,16 @@ describe("transfer", () => {
         assert.assertNotNull(tokenHolderTransaction);
         assert.stringEquals(value.toString(), tokenHolderTransaction ? tokenHolderTransaction.value.toString() : "");
 
-        // Token Holder Balance should NOT be created
+        // Token Holder Balance should be created
         const tokenHolderBalance = TokenHolderBalance.load(`${tokenHolder ? tokenHolder.id : ""}/2022-10-09`);
-        log.debug("token holder balance should be null", []);
-        assert.assertNull(tokenHolderBalance);
+        const tokenHolderBalanceId = tokenHolderBalance ? tokenHolderBalance.id : "";
+        log.debug("token holder balance should not be null", []);
+        assert.assertNotNull(tokenHolderBalance);
+        assert.stringEquals("0", tokenHolderBalance ? tokenHolderBalance.balance.toString() : "");
         
-        // Token snapshot NOT updated
+        // Token balances updated
         const tokenDailySnapshot = TokenDailySnapshot.load(`${tokenId}/2022-10-09`);
-        assert.assertNull(tokenDailySnapshot);
+        assert.assertTrue(stringArrayEquals([tokenHolderBalanceId], tokenDailySnapshot ? tokenDailySnapshot.balancesList : []));
     });
 
     test("multiple transfers, single day", () => {
@@ -173,15 +175,16 @@ describe("transfer", () => {
         log.debug("token holder should not be null", []);
         assert.assertNotNull(tokenHolder);
 
-        // Token Holder Balance should be deleted (0 balance)
+        // Token Holder Balance should be updated
         const tokenHolderBalance = TokenHolderBalance.load(`${tokenHolder ? tokenHolder.id : ""}/2022-10-09`);
-        log.debug("token holder balance should be null", []);
-        assert.assertNull(tokenHolderBalance);
+        const tokenHolderBalanceId = tokenHolderBalance ? tokenHolderBalance.id : "";
+        log.debug("token holder balance should not be null", []);
+        assert.assertNotNull(tokenHolderBalance);
 
-        // Token snapshot balances should be deleted (0 balance)
+        // Token balances updated
+        log.debug("token daily snapshot should be updated", []);
         const tokenDailySnapshot = TokenDailySnapshot.load(`${tokenId}/2022-10-09`);
-        log.debug("token daily snapshot should be null", []);
-        assert.assertTrue(stringArrayEquals([], tokenDailySnapshot ? tokenDailySnapshot.balancesList : []));
+        assert.assertTrue(stringArrayEquals([tokenHolderBalanceId], tokenDailySnapshot ? tokenDailySnapshot.balancesList : []));
     });
 
     test("multiple transfers, multiple days", () => {
@@ -219,7 +222,7 @@ describe("transfer", () => {
         assert.assertNotNull(tokenHolderBalance);
         assert.stringEquals(value.plus(valueTwo).toString(), tokenHolderBalance ? tokenHolderBalance.balance.toString() : "");
         
-        // Token balances updated
+        // Snapshot updated
         log.debug("token daily snapshot should be updated", []);
         const tokenDailySnapshot = TokenDailySnapshot.load(`${tokenId}/2022-10-10`);
         assert.assertTrue(stringArrayEquals([tokenHolderBalanceId], tokenDailySnapshot ? tokenDailySnapshot.balancesList : []));
@@ -247,15 +250,17 @@ describe("transfer", () => {
         log.debug("token holder should not be null", []);
         assert.assertNotNull(tokenHolder);
 
-        // Token Holder Balance should not be present (due to 0 balance)
+        // Token Holder Balance should be updated
         const tokenHolderBalance = TokenHolderBalance.load(`${tokenHolder ? tokenHolder.id : ""}/2022-10-10`);
-        log.debug("token holder balance should be null", []);
-        assert.assertNull(tokenHolderBalance);
+        const tokenHolderBalanceId = tokenHolderBalance ? tokenHolderBalance.id : "";
+        log.debug("token holder balance should not be null", []);
+        assert.assertNotNull(tokenHolderBalance);
+        assert.stringEquals("0", tokenHolderBalance ? tokenHolderBalance.balance.toString() : "");
         
-        // Snapshot does not contain the balance
+        // Snapshot updated
         log.debug("token daily snapshot should be updated", []);
         const tokenDailySnapshot = TokenDailySnapshot.load(`${tokenId}/2022-10-10`);
-        assert.assertTrue(stringArrayEquals([], tokenDailySnapshot ? tokenDailySnapshot.balancesList : []));
+        assert.assertTrue(stringArrayEquals([tokenHolderBalanceId], tokenDailySnapshot ? tokenDailySnapshot.balancesList : []));
     });
 
     test("multiple transfers, multiple days, backfill, zero balance", () => {
@@ -288,15 +293,17 @@ describe("transfer", () => {
         log.debug("token holder should not be null", []);
         assert.assertNotNull(tokenHolder);
 
-        // Token Holder Balance should not be present (due to 0 balance)
+        // Token Holder Balance should be updated
         const tokenHolderBalance = TokenHolderBalance.load(`${tokenHolder ? tokenHolder.id : ""}/2022-10-10`);
-        log.debug("token holder balance should be null", []);
-        assert.assertNull(tokenHolderBalance);
+        const tokenHolderBalanceId = tokenHolderBalance ? tokenHolderBalance.id : "";
+        log.debug("token holder balance should not be null", []);
+        assert.assertNotNull(tokenHolderBalance);
+        assert.stringEquals("0", tokenHolderBalance ? tokenHolderBalance.balance.toString() : "");
         
-        // Snapshot does not contain the balance
+        // Snapshot updated
         log.debug("token daily snapshot should be updated", []);
         const tokenDailySnapshot = TokenDailySnapshot.load(`${tokenId}/2022-10-10`);
-        assert.assertTrue(stringArrayEquals([], tokenDailySnapshot ? tokenDailySnapshot.balancesList : []));
+        assert.assertTrue(stringArrayEquals([tokenHolderBalanceId], tokenDailySnapshot ? tokenDailySnapshot.balancesList : []));
     });
 });
 
@@ -368,6 +375,34 @@ describe("backfill", () => {
         const timestampTwo = BigInt.fromString("1665402107"); // 2022-10-10T11:41:47.000
         backfill(timestampTwo, token);
 
+        // 0 balance from the previous day is not copied
+        const tokenDailySnapshot = TokenDailySnapshot.load(`${token.id}/2022-10-10`);
+        assert.assertTrue(stringArrayEquals([], tokenDailySnapshot ? tokenDailySnapshot.balancesList : []));
+    });
+
+    test("does not backfill for 0 balance, existing snapshot", () => {
+        // This will create a balance and snapshot for 2022-10-09
+        const value = BigDecimal.fromString("0");
+        updateTokenBalance(getTokenAddress(), getHolderAddress(), toBigInt(value), false, getBlock(), getTimestamp(), getTransaction(), "TRANSFER", getTransactionLogIndex());
+
+        // Token should be created
+        const token = Token.load("gOHM/Ethereum");
+        if (!token) {
+            throw new Error("token cannot be null");
+        }
+        
+        // Create a snapshot
+        const snapshot = new TokenDailySnapshot("gOHM/Ethereum/2022-10-10");
+        snapshot.date = "2022-10-10";
+        snapshot.balancesList = [];
+        snapshot.token = token.id;
+        snapshot.save();
+        
+        // Calling backfill will populate the current day's snapshot
+        const timestampTwo = BigInt.fromString("1665402107"); // 2022-10-10T11:41:47.000
+        backfill(timestampTwo, token);
+
+        // 0 balance from the previous day is not copied
         const tokenDailySnapshot = TokenDailySnapshot.load(`${token.id}/2022-10-10`);
         assert.assertTrue(stringArrayEquals([], tokenDailySnapshot ? tokenDailySnapshot.balancesList : []));
     });

@@ -2,7 +2,7 @@ import { Address, BigDecimal, BigInt, Bytes, ethereum, log, store } from "@graph
 
 import { BurnCall, MintCall, Transfer } from "../generated/gOHM/gOHM";
 import { Token, TokenDailySnapshot, TokenHolder, TokenHolderBalance, TokenHolderTransaction } from "../generated/schema";
-import { arrayIncludesLoose } from "./arrayHelper";
+import { arrayIncludesLoose, stringArrayToMap } from "./arrayHelper";
 import { getISO8601DateStringFromTimestamp, getISO8601StringFromTimestamp } from "./dateHelper";
 import { toDecimal } from "./decimalHelper";
 
@@ -206,10 +206,13 @@ export function updateTokenBalance(
   const decimalValue = toDecimal(value, tokenDecimals);
 
   const unixTimestamp = timestamp.toI64() * 1000;
+  const tokenName = getTokenName(tokenAddress.toHexString());
+  assert(tokenName.length > 0, "Could not find token name for " + tokenAddress.toHexString()); // Fail loudly during indexing if we can't get the token name
+
   log.debug(
     "updateTokenBalance: token {}, holder {}, value {}, isSender {}, type {}, transaction {}, logIndex {}",
     [
-      tokenAddress.toHexString(),
+      tokenName,
       holderAddress.toHexString(),
       decimalValue.toString(),
       isSender ? "true" : "false",
@@ -218,9 +221,6 @@ export function updateTokenBalance(
       transactionLogIndex.toString(),
     ],
   );
-
-  const tokenName = getTokenName(tokenAddress.toHexString());
-  assert(tokenName.length > 0, "Could not find token name for " + tokenAddress.toHexString()); // Fail loudly during indexing if we can't get the token name
 
   // Get the parent token
   const token = createOrLoadToken(tokenAddress, tokenName, "Ethereum");
@@ -256,55 +256,20 @@ export function updateTokenBalance(
   tokenHolder.balance = newBalance;
   tokenHolder.save();
 
-  // We don't bother to save 0 balances
-  if (newBalance.equals(BigDecimal.zero())) {
-    // Delete the existing holder balance
-    const balanceRecord = getHolderBalance(unixTimestamp, tokenHolder);
-    if (balanceRecord) {
-      store.remove("TokenHolderBalance", balanceRecord.id);
-    }
-
-    // Remove from snapshot
-    const dailySnapshot = getDailySnapshot(unixTimestamp, token);
-    if (dailySnapshot && balanceRecord) {
-      const balancesList = dailySnapshot.balancesList;
-      const balanceRecordIndex = balancesList.indexOf(balanceRecord.id);
-      if (balanceRecordIndex > -1) {
-        balancesList.splice(balanceRecordIndex, 1);
-      }
-      dailySnapshot.balancesList = balancesList;
-      dailySnapshot.save();
-    }
-
-    return;
-  }
-
-  // Create or update the balance
+  // Create or update the balance (0 balances will be cleaned up the next day by the backfill function)
   const balanceRecord = createOrLoadTokenHolderBalance(tokenHolder, newBalance, unixTimestamp);
   balanceRecord.balance = newBalance;
   balanceRecord.save();
 
   // Create or uppdate the daily snapshot
   const dailySnapshot = createOrLoadTokenDailySnapshot(unixTimestamp, token);
-  const balancesList = dailySnapshot.balancesList;
 
-  // Only add balanceRecord if it doesn't exist
-  // TODO consider a more efficient approach
-  if (!balancesList.includes(balanceRecord.id)) {
-    balancesList.push(balanceRecord.id);
-  }
+  // Use a map to prevent duplicates
+  const balancesMap = stringArrayToMap(dailySnapshot.balancesList);
+  balancesMap.set(balanceRecord.id, balanceRecord.id);
+  dailySnapshot.balancesList = balancesMap.values();
 
-  dailySnapshot.balancesList = balancesList;
   dailySnapshot.save();
-}
-
-function stringArrayToMap(array: string[]): Map<string, string> {
-  const newMap = new Map<string, string>();
-  for (let i = 0; i < array.length; i++) {
-    newMap.set(array[i], array[i]);
-  }
-
-  return newMap;
 }
 
 export function backfill(timestamp: BigInt, token: Token): void {
@@ -332,6 +297,12 @@ export function backfill(timestamp: BigInt, token: Token): void {
         throw new Error("Expected to find TokenHolderBalance with id " + previousBalanceId + ", but could not");
       }
 
+      // Don't copy 0 balances
+      if (previousBalance.balance.equals(BigDecimal.zero())) {
+        log.debug("Skipping previous balance of 0", []);
+        continue;
+      }
+
       // previousBalanceId contains the date, so we need to convert to today's date
       const newBalanceId = getHolderBalanceIdOnDate(previousBalanceId, unixTimestamp);
       createTokenHolderBalance(newBalanceId, getISO8601DateStringFromTimestamp(unixTimestamp), previousBalance.holder, previousBalance.balance);
@@ -352,6 +323,12 @@ export function backfill(timestamp: BigInt, token: Token): void {
       const previousBalance = TokenHolderBalance.load(previousBalanceId);
       if (!previousBalance) {
         throw new Error("Expected to find TokenHolderBalance with id " + previousBalanceId + ", but could not");
+      }
+
+      // Don't copy 0 balances
+      if (previousBalance.balance.equals(BigDecimal.zero())) {
+        log.debug("Skipping previous balance of 0", []);
+        continue;
       }
 
       const newBalanceId = getHolderBalanceIdOnDate(previousBalanceId, unixTimestamp);

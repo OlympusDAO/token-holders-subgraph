@@ -18,3 +18,12 @@ export function arrayIncludesLoose(array: string[], value: string): boolean {
 
   return false;
 }
+
+export function stringArrayToMap(array: string[]): Map<string, string> {
+  const newMap = new Map<string, string>();
+  for (let i = 0; i < array.length; i++) {
+    newMap.set(array[i], array[i]);
+  }
+
+  return newMap;
+}
