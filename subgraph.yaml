@@ -22,6 +22,9 @@ dataSources:
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
+      # Backfill every hour
+      blockHandlers:
+        - handler: handleGOhmBlock
       file: ./src/handleEvent.ts
   # - kind: ethereum
   #   name: OHMv1
@@ -85,6 +88,9 @@ dataSources:
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
+      # Backfill every hour
+      blockHandlers:
+        - handler: handleOhmV2Block
       file: ./src/handleEvent.ts
   # - kind: ethereum
   #   name: sOHMv2

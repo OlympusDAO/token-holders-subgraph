@@ -1,4 +1,4 @@
-import { Address, BigDecimal, BigInt, Bytes, log } from "@graphprotocol/graph-ts";
+import { Address, BigDecimal, BigInt, Bytes, ethereum, log, store } from "@graphprotocol/graph-ts";
 
 import { BurnCall, MintCall, Transfer } from "../generated/gOHM/gOHM";
 import { Token, TokenDailySnapshot, TokenHolder, TokenHolderBalance, TokenHolderTransaction } from "../generated/schema";
@@ -147,12 +147,20 @@ function createTokenHolderTransaction(
   return transactionRecord;
 }
 
+function getHolderBalanceId(timestamp: i64, tokenHolder: TokenHolder): string {
+  return `${tokenHolder.id}/${getISO8601DateStringFromTimestamp(timestamp)}`;
+}
+
+function getHolderBalance(timestamp: i64, tokenHolder: TokenHolder): TokenHolderBalance | null {
+  return TokenHolderBalance.load(getHolderBalanceId(timestamp, tokenHolder));
+}
+
 function createTokenHolderBalance(
   tokenHolder: TokenHolder,
   balance: BigDecimal,
   timestamp: i64,
 ): TokenHolderBalance {
-  const balanceId = `${tokenHolder.id}/${getISO8601DateStringFromTimestamp(timestamp)}`;
+  const balanceId = getHolderBalanceId(timestamp, tokenHolder);
   const loadedBalance = TokenHolderBalance.load(balanceId);
   if (loadedBalance) {
     return loadedBalance;
@@ -240,6 +248,24 @@ export function updateTokenBalance(
 
   // We don't bother to save 0 balances
   if (newBalance.equals(BigDecimal.zero())) {
+    // Delete the existing holder balance
+    const balanceRecord = getHolderBalance(unixTimestamp, tokenHolder);
+    if (balanceRecord) {
+      store.remove("TokenHolderBalance", balanceRecord.id);
+    }
+
+    // Remove from snapshot
+    const dailySnapshot = getDailySnapshot(unixTimestamp, token);
+    if (dailySnapshot && balanceRecord) {
+      const balancesList = dailySnapshot.balancesList;
+      const balanceRecordIndex = balancesList.indexOf(balanceRecord.id);
+      if (balanceRecordIndex > -1) {
+        balancesList.splice(balanceRecordIndex, 1);
+      }
+      dailySnapshot.balancesList = balancesList;
+      dailySnapshot.save();
+    }
+
     return;
   }
 
@@ -356,4 +382,24 @@ export function handleBurn(call: BurnCall): void {
     TYPE_BURN,
     BigInt.fromString("0"),
   );
+}
+
+export function handleGOhmBlock(block: ethereum.Block): void {
+  // Do backfill every hour
+  if (!block.number.mod(BigInt.fromString("3600")).equals(BigInt.zero())) {
+    return;
+  }
+
+  const token = createOrLoadToken(Address.fromString(ERC20_GOHM), getTokenName(ERC20_GOHM), "Ethereum");
+  backfill(block.timestamp, token);
+}
+
+export function handleOhmV2Block(block: ethereum.Block): void {
+  // Do backfill every hour
+  if (!block.number.mod(BigInt.fromString("3600")).equals(BigInt.zero())) {
+    return;
+  }
+
+  const token = createOrLoadToken(Address.fromString(ERC20_OHM_V2), getTokenName(ERC20_OHM_V2), "Ethereum");
+  backfill(block.timestamp, token);
 }
