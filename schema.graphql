@@ -4,6 +4,7 @@ enum TransactionType {
   BURN
 }
 
+# Represents a single transaction, linked to a holder and a token.
 type TokenHolderTransaction @entity(immutable: true) {
   id: ID! # <tokenholder ID>-transaction-logIndex
   balance: BigDecimal!
@@ -18,6 +19,7 @@ type TokenHolderTransaction @entity(immutable: true) {
   value: BigDecimal!
 }
 
+# Daily balance for a specific holder and token
 type TokenHolderBalance @entity {
   # One per day
   id: ID! # <tokenholder ID>-<YYYY-MM-DD>
@@ -26,6 +28,7 @@ type TokenHolderBalance @entity {
   balance: BigDecimal!
 }
 
+# Rollup entity for a specific holder and token, which enables access to their balances
 type TokenHolder @entity {
   id: ID! # <token ID>-holder
   balance: BigDecimal!
@@ -34,11 +37,17 @@ type TokenHolder @entity {
   balances: [TokenHolderBalance!]! @derivedFrom(field: "holder")
 }
 
+# Daily snapshot for a specific token
+# This entity enables getting balances for a specific day, without
+# knowing the addresses of holders
 type TokenDailySnapshot @entity {
   id: ID! # <token ID>/<YYYY-MM-DD>
   date: String! # YYYY-MM-DD
   token: Token!
-  balancesList: [String!]! # TokenHolderBalance IDs
+  # Un-managed list containing the IDs of TokenHolderBalance records
+  # for a specific day and token. A separate query can be run to fetch
+  # the records using the `where:{id_in: <list>}` filter for GraphQL.
+  balancesList: [String!]!
 }
 
 type Token @entity {
