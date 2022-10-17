@@ -102,7 +102,7 @@ function getDailySnapshot(timestamp: i64, token: Token): TokenDailySnapshot | nu
 function createOrLoadTokenDailySnapshot(timestamp: i64, token: Token): TokenDailySnapshot {
   const snapshotId = getDailySnapshotId(timestamp, token);
   const dateString = getISO8601DateStringFromTimestamp(timestamp);
-  
+
   const loadedSnapshot = TokenDailySnapshot.load(snapshotId);
   if (loadedSnapshot !== null) {
     return loadedSnapshot;
@@ -128,8 +128,7 @@ function createTokenHolderTransaction(
   transactionLogIndex: BigInt,
 ): TokenHolderTransaction {
   // The balanceId incorporates the transactionLogIndex, so that multiple transfers within a single transaction can be recorded
-  const transactionId = `${
-    tokenHolder.id
+  const transactionId = `${tokenHolder.id
     }/${transaction.toHexString()}/${transactionLogIndex.toString()}`;
   const transactionRecord = new TokenHolderTransaction(transactionId);
   transactionRecord.balance = balance;
@@ -264,11 +263,10 @@ export function updateTokenBalance(
   // Create or uppdate the daily snapshot
   const dailySnapshot = createOrLoadTokenDailySnapshot(unixTimestamp, token);
 
-  // Use a map to prevent duplicates
-  const balancesMap = stringArrayToMap(dailySnapshot.balancesList);
-  balancesMap.set(balanceRecord.id, balanceRecord.id);
-  dailySnapshot.balancesList = balancesMap.values();
-
+  // Add balance (it may be a duplicate, but will be cleaned up)
+  const dailySnapshotBalances = dailySnapshot.balancesList;
+  dailySnapshotBalances.push(balanceRecord.id);
+  dailySnapshot.balancesList = dailySnapshotBalances;
   dailySnapshot.save();
 }
 
@@ -283,7 +281,7 @@ export function backfill(timestamp: BigInt, token: Token): void {
 
   // Grab the daily snapshot
   const currentSnapshot = getDailySnapshot(unixTimestamp, token);
-  
+
   // If there's no daily snapshot, we copy the balance list from the previous day
   if (!currentSnapshot) {
     log.debug("No snapshot for the current day. Copying from the previous day.", []);
@@ -399,14 +397,38 @@ export function handleBurn(call: BurnCall): void {
   );
 }
 
-function handleBlock(block: ethereum.Block, token: Token): void {
-  // Perform backfill at 00:01
-  const date = new Date(block.timestamp.toI64() * 1000);
-  if (!(date.getUTCHours() === 0 && date.getUTCMinutes() === 1)) {
+function dedupeBalancesList(timestamp: BigInt, token: Token): void {
+  const unixTimestamp = timestamp.toI64() * 1000;
+  log.info("Performing dedupe at date {} for token {}", [getISO8601StringFromTimestamp(unixTimestamp), token.name]);
+  const currentSnapshot = getDailySnapshot(unixTimestamp, token);
+  if (!currentSnapshot) {
     return;
   }
 
-  backfill(block.timestamp, token);
+  // Converting to a map and back to an array will automatically de-dupe the list
+  const balanceMap = stringArrayToMap(currentSnapshot.balancesList);
+  currentSnapshot.balancesList = balanceMap.values();
+  currentSnapshot.save();
+}
+
+export function handleBlock(block: ethereum.Block, token: Token): void {
+  // Perform backfill at 00:01
+  const date = new Date(block.timestamp.toI64() * 1000);
+
+  // 00:01:00 - 00:01:30
+  if (date.getUTCHours() === 0 && date.getUTCMinutes() === 1 && date.getUTCSeconds() < 30) {
+    // Backfill (copy balances from the previous day)
+    backfill(block.timestamp, token);
+
+    // Also de-dupe the previous day
+    const timestampPreviousDay = BigInt.fromI64(date.getTime() / 1000 - 5 * 60);
+    dedupeBalancesList(timestampPreviousDay, token)
+  }
+
+  // Every hour
+  if (block.number.mod(BigInt.fromI64(60 * 60 / 12)).equals(BigInt.zero())) {
+    dedupeBalancesList(block.timestamp, token);
+  }
 }
 
 export function handleGOhmBlock(block: ethereum.Block): void {
