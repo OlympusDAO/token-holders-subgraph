@@ -10,6 +10,8 @@ export function handleTransfer(event: Transfer): void {
     updateTokenBalance(
         event.address,
         event.params.from,
+        event.params.from,
+        event.params.to,
         event.params.value,
         true,
         event.block.number,
@@ -21,6 +23,8 @@ export function handleTransfer(event: Transfer): void {
 
     updateTokenBalance(
         event.address,
+        event.params.to,
+        event.params.from,
         event.params.to,
         event.params.value,
         false,
@@ -78,6 +82,6 @@ export function handleBlock(block: ethereum.Block): void {
 
         // Mimic a transfer of the difference
         // TODO should there be a decerement of the staking contract?
-        updateTokenBalance(tokenAddress, holderAddress, toBigInt(difference, sOHMDecimals), false, block.number, block.timestamp, block.hash, TYPE_REBASE, BigInt.zero());
+        updateTokenBalance(tokenAddress, holderAddress, Address.fromString(STAKING_V3), holderAddress, toBigInt(difference, sOHMDecimals), false, block.number, block.timestamp, block.hash, TYPE_REBASE, BigInt.zero());
     }
 }

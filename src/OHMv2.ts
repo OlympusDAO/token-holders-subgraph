@@ -6,6 +6,8 @@ export function handleTransfer(event: Transfer): void {
     updateTokenBalance(
         event.address,
         event.params.from,
+        event.params.from,
+        event.params.to,
         event.params.value,
         true,
         event.block.number,
@@ -14,8 +16,11 @@ export function handleTransfer(event: Transfer): void {
         TYPE_TRANSFER,
         event.transactionLogIndex,
     );
+
     updateTokenBalance(
         event.address,
+        event.params.to,
+        event.params.from,
         event.params.to,
         event.params.value,
         false,

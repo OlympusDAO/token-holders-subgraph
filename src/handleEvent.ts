@@ -44,6 +44,8 @@ function createOrLoadTokenHolder(token: Token, address: Address): TokenHolder {
 
 function createTokenHolderTransaction(
   tokenHolder: TokenHolder,
+  sender: Address,
+  receiver: Address,
   balance: BigDecimal,
   value: BigDecimal,
   block: BigInt,
@@ -61,6 +63,8 @@ function createTokenHolderTransaction(
   tokenBalance.date = getISO8601StringFromTimestamp(timestamp);
   tokenBalance.holder = tokenHolder.id;
   tokenBalance.previousBalance = tokenHolder.balance;
+  tokenBalance.sender = sender;
+  tokenBalance.receiver = receiver;
   tokenBalance.timestamp = timestamp.toString();
   tokenBalance.transaction = transaction;
   tokenBalance.transactionLogIndex = transactionLogIndex;
@@ -74,6 +78,8 @@ function createTokenHolderTransaction(
 export function updateTokenBalance(
   tokenAddress: Address,
   holderAddress: Address,
+  fromAddress: Address,
+  toAddress: Address,
   value: BigInt,
   isSender: boolean,
   block: BigInt,
@@ -137,6 +143,8 @@ export function updateTokenBalance(
   // Create a new balance record
   createTokenHolderTransaction(
     tokenHolder,
+    fromAddress,
+    toAddress,
     newBalance,
     adjustedValue,
     block,
