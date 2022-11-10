@@ -1,11 +1,10 @@
 import { Address, BigDecimal, BigInt, Bytes, log } from "@graphprotocol/graph-ts";
 
-import { Transfer } from "../generated/gOHM/gOHM";
 import { Token, TokenHolder, TokenHolderTransaction } from "../generated/schema";
-import { arrayIncludesLoose } from "./arrayHelper";
-import { IGNORED_ADDRESSES, getTokenDecimals, getTokenName, TYPE_TRANSFER } from "./constants";
-import { getISO8601StringFromTimestamp } from "./dateHelper";
-import { toDecimal } from "./decimalHelper";
+import { arrayIncludesLoose } from "./helpers/arrayHelper";
+import { IGNORED_ADDRESSES, getTokenDecimals, getTokenName } from "./constants";
+import { getISO8601StringFromTimestamp } from "./helpers/dateHelper";
+import { toDecimal } from "./helpers/decimalHelper";
 
 // Inspired by: https://github.com/xdaichain/token-holders-subgraph/blob/master/src/mapping.ts
 
@@ -70,7 +69,7 @@ function createTokenHolderTransaction(
   return tokenBalance;
 }
 
-function updateTokenBalance(
+export function updateTokenBalance(
   tokenAddress: Address,
   holderAddress: Address,
   value: BigInt,
@@ -140,29 +139,4 @@ function updateTokenBalance(
   // Update the TokenHolder
   tokenHolder.balance = newBalance;
   tokenHolder.save();
-}
-
-export function handleTransfer(event: Transfer): void {
-  updateTokenBalance(
-    event.address,
-    event.params.from,
-    event.params.value,
-    true,
-    event.block.number,
-    event.block.timestamp,
-    event.transaction.hash,
-    TYPE_TRANSFER,
-    event.transactionLogIndex,
-  );
-  updateTokenBalance(
-    event.address,
-    event.params.to,
-    event.params.value,
-    false,
-    event.block.number,
-    event.block.timestamp,
-    event.transaction.hash,
-    TYPE_TRANSFER,
-    event.transactionLogIndex,
-  );
 }

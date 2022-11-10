@@ -22,7 +22,7 @@ dataSources:
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
-      file: ./src/handleEvent.ts
+      file: ./src/gOHM.ts
   - kind: ethereum
     name: OHMv1
     network: mainnet
@@ -43,7 +43,7 @@ dataSources:
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
-      file: ./src/handleEvent.ts
+      file: ./src/OHMv1.ts
   # - kind: ethereum
   #   name: sOHMv1
   #   network: mainnet
@@ -85,7 +85,7 @@ dataSources:
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
-      file: ./src/handleEvent.ts
+      file: ./src/OHMv2.ts
   # - kind: ethereum
   #   name: sOHMv2
   #   network: mainnet
