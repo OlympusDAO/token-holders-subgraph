@@ -1,6 +1,6 @@
-import { Address } from "@graphprotocol/graph-ts";
+import { Address, BigDecimal, BigInt, ethereum } from "@graphprotocol/graph-ts";
 import { TokenHolder } from "../generated/schema";
-import { RebaseCall, sOHMv3, Transfer } from "../generated/sOHMv3/sOHMv3";
+import { sOHMv3, Transfer } from "../generated/sOHMv3/sOHMv3";
 import { CHAIN_ETHEREUM, ERC20_SOHM_V3, getTokenName, STAKING_V3, TYPE_REBASE, TYPE_TRANSFER } from "./constants";
 import { updateTokenBalance } from "./handleEvent";
 import { toBigInt, toDecimal } from "./helpers/decimalHelper";
@@ -32,10 +32,20 @@ export function handleTransfer(event: Transfer): void {
         event.transaction.hash,
         TYPE_TRANSFER,
         event.transactionLogIndex,
+        isFromStakingContract ? true : false, // If it's the staking contract, skip the balance assertion
     );
 }
 
-export function handleRebase(event: RebaseCall): void {
+/**
+ * Records the rebase rewards every 8 hours.
+ * 
+ * The rebase function call cannot be used, as it is called every
+ * time a wallet stakes, leading to too many records and slow indexing.
+ * 
+ * @param block 
+ * @returns 
+ */
+export function handleBlock(block: ethereum.Block): void {
     // Get list of token holders
     const token = createOrLoadToken(Address.fromString(ERC20_SOHM_V3), getTokenName(ERC20_SOHM_V3), CHAIN_ETHEREUM);
     if (!token) {
@@ -65,8 +75,13 @@ export function handleRebase(event: RebaseCall): void {
 
         const difference = currentBalance.minus(previousBalance);
 
+        // No point in recording a 0 value
+        if (difference.equals(BigDecimal.zero())) {
+            continue;
+        }
+
         // Mimic a transfer of the difference
         // TODO should there be a decerement of the staking contract?
-        updateTokenBalance(tokenAddress, holderAddress, toBigInt(difference, sOHMDecimals), false, event.block.number, event.block.timestamp, event.transaction.hash, TYPE_REBASE, event.transaction.index);
+        updateTokenBalance(tokenAddress, holderAddress, toBigInt(difference, sOHMDecimals), false, block.number, block.timestamp, block.hash, TYPE_REBASE, BigInt.zero());
     }
 }

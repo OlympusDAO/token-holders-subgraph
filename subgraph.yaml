@@ -64,9 +64,8 @@ dataSources:
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
-      callHandlers:
-        - function: rebase(uint256)
-          handler: handleRebase
+      blockHandlers:
+        - handler: handleBlock
       file: ./src/sOHMv1.ts
   - kind: ethereum
     name: sOHMv2
@@ -88,9 +87,8 @@ dataSources:
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
-      callHandlers:
-        - function: rebase(uint256,uint256)
-          handler: handleRebase
+      blockHandlers:
+        - handler: handleBlock
       file: ./src/sOHMv2.ts
   - kind: ethereum
     name: OHMv2
@@ -133,7 +131,6 @@ dataSources:
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
-      callHandlers:
-        - function: rebase(uint256,uint256)
-          handler: handleRebase
+      blockHandlers:
+        - handler: handleBlock
       file: ./src/sOHMv3.ts
