@@ -9,12 +9,14 @@ type TokenHolderTransaction @entity(immutable: true) {
   balance: BigDecimal!
   block: BigInt!
   date: String! # ISO 8601 format
-  type: TransactionType!
   holder: TokenHolder!
   previousBalance: BigDecimal!
+  receiver: Bytes!
+  sender: Bytes!
   timestamp: String! # Unix format
   transaction: Bytes!
   transactionLogIndex: BigInt!
+  type: TransactionType!
   value: BigDecimal!
 }
 

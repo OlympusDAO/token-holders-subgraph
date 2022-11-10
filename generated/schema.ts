@@ -73,15 +73,6 @@ export class TokenHolderTransaction extends Entity {
     this.set("date", Value.fromString(value));
   }
 
-  get type(): string {
-    const value = this.get("type");
-    return value!.toString();
-  }
-
-  set type(value: string) {
-    this.set("type", Value.fromString(value));
-  }
-
   get holder(): string {
     const value = this.get("holder");
     return value!.toString();
@@ -98,6 +89,24 @@ export class TokenHolderTransaction extends Entity {
 
   set previousBalance(value: BigDecimal) {
     this.set("previousBalance", Value.fromBigDecimal(value));
+  }
+
+  get receiver(): Bytes {
+    const value = this.get("receiver");
+    return value!.toBytes();
+  }
+
+  set receiver(value: Bytes) {
+    this.set("receiver", Value.fromBytes(value));
+  }
+
+  get sender(): Bytes {
+    const value = this.get("sender");
+    return value!.toBytes();
+  }
+
+  set sender(value: Bytes) {
+    this.set("sender", Value.fromBytes(value));
   }
 
   get timestamp(): string {
@@ -125,6 +134,15 @@ export class TokenHolderTransaction extends Entity {
 
   set transactionLogIndex(value: BigInt) {
     this.set("transactionLogIndex", Value.fromBigInt(value));
+  }
+
+  get type(): string {
+    const value = this.get("type");
+    return value!.toString();
+  }
+
+  set type(value: string) {
+    this.set("type", Value.fromString(value));
   }
 
   get value(): BigDecimal {

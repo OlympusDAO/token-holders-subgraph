@@ -92,6 +92,8 @@ function createOrLoadTokenHolder(token: Token, address: Address): TokenHolder {
 
 function createTokenHolderTransaction(
   tokenHolder: TokenHolder,
+  sender: Address,
+  receiver: Address,
   balance: BigDecimal,
   value: BigDecimal,
   block: BigInt,
@@ -101,15 +103,16 @@ function createTokenHolderTransaction(
   transactionLogIndex: BigInt,
 ): TokenHolderTransaction {
   // The balanceId incorporates the transactionLogIndex, so that multiple transfers within a single transaction can be recorded
-  const balanceId = `${
-    tokenHolder.id
-  }/${transaction.toHexString()}/${transactionLogIndex.toString()}`;
+  const balanceId = `${tokenHolder.id
+    }/${transaction.toHexString()}/${transactionLogIndex.toString()}`;
   const tokenBalance = new TokenHolderTransaction(balanceId);
   tokenBalance.balance = balance;
   tokenBalance.block = block;
   tokenBalance.date = getISO8601StringFromTimestamp(timestamp);
   tokenBalance.holder = tokenHolder.id;
   tokenBalance.previousBalance = tokenHolder.balance;
+  tokenBalance.sender = sender;
+  tokenBalance.receiver = receiver;
   tokenBalance.timestamp = timestamp.toString();
   tokenBalance.transaction = transaction;
   tokenBalance.transactionLogIndex = transactionLogIndex;
@@ -123,6 +126,8 @@ function createTokenHolderTransaction(
 function updateTokenBalance(
   tokenAddress: Address,
   holderAddress: Address,
+  fromAddress: Address,
+  toAddress: Address,
   value: BigInt,
   isSender: boolean,
   block: BigInt,
@@ -178,6 +183,8 @@ function updateTokenBalance(
   // Create a new balance record
   createTokenHolderTransaction(
     tokenHolder,
+    fromAddress,
+    toAddress,
     newBalance,
     adjustedValue,
     block,
@@ -196,6 +203,8 @@ export function handleTransfer(event: Transfer): void {
   updateTokenBalance(
     event.address,
     event.params.from,
+    event.params.from,
+    event.params.to,
     event.params.value,
     true,
     event.block.number,
@@ -207,6 +216,8 @@ export function handleTransfer(event: Transfer): void {
   updateTokenBalance(
     event.address,
     event.params.to,
+    event.params.from,
+    event.params.to,
     event.params.value,
     false,
     event.block.number,
@@ -214,33 +225,5 @@ export function handleTransfer(event: Transfer): void {
     event.transaction.hash,
     TYPE_TRANSFER,
     event.transactionLogIndex,
-  );
-}
-
-export function handleMint(call: MintCall): void {
-  updateTokenBalance(
-    call.to,
-    call.inputs._to,
-    call.inputs._amount,
-    false,
-    call.block.number,
-    call.block.timestamp,
-    call.transaction.hash,
-    TYPE_MINT,
-    BigInt.fromString("0"),
-  );
-}
-
-export function handleBurn(call: BurnCall): void {
-  updateTokenBalance(
-    call.to,
-    call.inputs._from,
-    call.inputs._amount,
-    true,
-    call.block.number,
-    call.block.timestamp,
-    call.transaction.hash,
-    TYPE_BURN,
-    BigInt.fromString("0"),
   );
 }
