@@ -7,8 +7,6 @@ import { toBigInt, toDecimal } from "./helpers/decimalHelper";
 import { createOrLoadToken } from "./helpers/tokenHelper";
 
 export function handleTransfer(event: Transfer): void {
-    const isFromStakingContract = event.params.from.toHexString().toLowerCase() !== STAKING_V2.toLowerCase();
-
     updateTokenBalance(
         event.address,
         event.params.from,
@@ -19,7 +17,6 @@ export function handleTransfer(event: Transfer): void {
         event.transaction.hash,
         TYPE_TRANSFER,
         event.transactionLogIndex,
-        isFromStakingContract ? true : false, // If it's the staking contract, skip the balance assertion
     );
 
     updateTokenBalance(
@@ -32,7 +29,6 @@ export function handleTransfer(event: Transfer): void {
         event.transaction.hash,
         TYPE_TRANSFER,
         event.transactionLogIndex,
-        isFromStakingContract ? true : false, // If it's the staking contract, skip the balance assertion
     );
 }
 
