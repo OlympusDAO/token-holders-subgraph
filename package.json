@@ -7,7 +7,7 @@
   "scripts": {
     "codegen": "graph codegen && yarn eslint --config ./.eslintrc.json --fix generated/",
     "build": "graph build",
-    "deploy": "source .subgraph-version && graph deploy --node https://api.thegraph.com/deploy/ --ipfs https://api.thegraph.com/ipfs/ --version-label $SUBGRAPH_VERSION olympusdao/token-holders",
+    "deploy": "source .subgraph-version && graph deploy --node https://api.thegraph.com/deploy/ --ipfs https://api.thegraph.com/ipfs/ olympusdao/token-holders",
     "deploy:dev": "source .subgraph-version && graph deploy --studio token-holders --version-label $SUBGRAPH_VERSION",
     "test": "graph test --version 0.5.3",
     "test:force": "yarn test --recompile",
