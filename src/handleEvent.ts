@@ -2,28 +2,23 @@ import { Address, BigDecimal, BigInt, Bytes, log } from "@graphprotocol/graph-ts
 
 import { Token, TokenHolder, TokenHolderTransaction } from "../generated/schema";
 import { arrayIncludesLoose } from "./helpers/arrayHelper";
-import { IGNORED_ADDRESSES, getTokenDecimals, getTokenName } from "./constants";
+import { IGNORED_ADDRESSES, getTokenDecimals, getTokenName, CHAIN_ETHEREUM } from "./constants";
 import { getISO8601StringFromTimestamp } from "./helpers/dateHelper";
 import { toDecimal } from "./helpers/decimalHelper";
+import { createOrLoadToken } from "./helpers/tokenHelper";
 
 // Inspired by: https://github.com/xdaichain/token-holders-subgraph/blob/master/src/mapping.ts
 
-function createOrLoadToken(address: Address, name: string, blockchain: string): Token {
-  const tokenId = `${name}/${blockchain}`;
-  const loadedToken = Token.load(tokenId);
-  if (loadedToken !== null) {
-    return loadedToken;
-  }
-
-  const token = new Token(tokenId);
-  token.address = address;
-  token.name = name;
-  token.blockchain = blockchain;
-  token.save();
-
-  return token;
-}
-
+/**
+ * Creates or loads a TokenHolder record.
+ * 
+ * If the TokenHolder is being created, it also adds the id to the `tokenHolders`
+ * mapping array on the respective Token record.
+ * 
+ * @param token 
+ * @param address 
+ * @returns 
+ */
 function createOrLoadTokenHolder(token: Token, address: Address): TokenHolder {
   const holderId = `${token.id}/${address.toHexString()}`;
   const loadedHolder = TokenHolder.load(holderId);
@@ -36,6 +31,13 @@ function createOrLoadTokenHolder(token: Token, address: Address): TokenHolder {
   tokenHolder.balance = BigDecimal.zero();
   tokenHolder.token = token.id;
   tokenHolder.save();
+
+  // Add the record id to Token too, so it can be accessed
+  // As this is only done at creation time, there are no duplicates
+  let existingTokenHolders: string[] = token.tokenHolders;
+  existingTokenHolders.push(tokenHolder.id);
+  token.tokenHolders = existingTokenHolders;
+  token.save();
 
   return tokenHolder;
 }
@@ -107,7 +109,7 @@ export function updateTokenBalance(
   assert(tokenName.length > 0, "Could not find token name for " + tokenAddress.toHexString()); // Fail loudly during indexing if we can't get the token name
 
   // Get the parent token
-  const token = createOrLoadToken(tokenAddress, tokenName, "Ethereum");
+  const token = createOrLoadToken(tokenAddress, tokenName, CHAIN_ETHEREUM);
 
   // Get the token holder record
   const tokenHolder = createOrLoadTokenHolder(token, holderAddress);

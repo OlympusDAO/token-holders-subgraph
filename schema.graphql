@@ -2,6 +2,7 @@ enum TransactionType {
   TRANSFER
   MINT
   BURN
+  REBASE
 }
 
 type TokenHolderTransaction @entity(immutable: true) {
@@ -30,4 +31,5 @@ type Token @entity {
   address: Bytes!
   blockchain: String!
   name: String!
+  tokenHolders: [String!]! # Un-managed list of TokenHolder records
 }

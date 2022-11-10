@@ -4,6 +4,12 @@ export const ERC20_SOHM_V1 = "0x04F2694C8fcee23e8Fd0dfEA1d4f5Bb8c352111F";
 export const ERC20_OHM_V2 = "0x64aa3364f17a4d01c6f1751fd97c2bd3d7e7f1d5";
 export const ERC20_SOHM_V2 = "0x04906695D6D12CF5459975d7C3C03356E4Ccd460";
 
+// export const STAKING_V1 = "0x0822F3C03dcc24d200AFF33493Dc08d0e1f274A2";
+// export const STAKING_V2 = "0xFd31c7d00Ca47653c6Ce64Af53c1571f9C36566a";
+// export const STAKING_V3 = "0xB63cac384247597756545b500253ff8E607a8020"; // Paired with OHM V2
+
+export const CHAIN_ETHEREUM = "Ethereum";
+
 const NULL = "0x0000000000000000000000000000000000000000";
 export const IGNORED_ADDRESSES = [
     ERC20_GOHM,
@@ -17,6 +23,7 @@ export const IGNORED_ADDRESSES = [
 export const TYPE_TRANSFER = "TRANSFER";
 export const TYPE_MINT = "MINT";
 export const TYPE_BURN = "BURN";
+export const TYPE_REBASE = "REBASE";
 
 const TOKENS = new Map<string, string>();
 TOKENS.set(ERC20_GOHM.toLowerCase(), "gOHM");

@@ -253,4 +253,13 @@ export class Token extends Entity {
   set name(value: string) {
     this.set("name", Value.fromString(value));
   }
+
+  get tokenHolders(): Array<string> {
+    const value = this.get("tokenHolders");
+    return value!.toStringArray();
+  }
+
+  set tokenHolders(value: Array<string>) {
+    this.set("tokenHolders", Value.fromStringArray(value));
+  }
 }

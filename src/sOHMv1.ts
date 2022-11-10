@@ -1,6 +1,10 @@
-import { RebaseCall, Transfer } from "../generated/sOHMv1/sOHMv1";
-import { TYPE_TRANSFER } from "./constants";
+import { Address } from "@graphprotocol/graph-ts";
+import { Token, TokenHolder } from "../generated/schema";
+import { RebaseCall, sOHMv1, Transfer } from "../generated/sOHMv1/sOHMv1";
+import { CHAIN_ETHEREUM, ERC20_SOHM_V1, TYPE_REBASE, TYPE_TRANSFER } from "./constants";
 import { updateTokenBalance } from "./handleEvent";
+import { toBigInt, toDecimal } from "./helpers/decimalHelper";
+import { getTokenId } from "./helpers/tokenHelper";
 
 export function handleTransfer(event: Transfer): void {
     updateTokenBalance(
@@ -28,9 +32,37 @@ export function handleTransfer(event: Transfer): void {
 }
 
 export function handleRebase(event: RebaseCall): void {
-    // Determine the current balance of sOHM
+    // Get list of token holders
+    const token = Token.load(getTokenId(ERC20_SOHM_V1, CHAIN_ETHEREUM));
+    if (!token) {
+        throw new Error(`Expected to find Token record for ${ERC20_SOHM_V1}, but it was null.`);
+    }
 
-    // Determine the previous balance of sOHM
+    const tokenAddress = Address.fromString(ERC20_SOHM_V1);
+    const sOHMv1Contract = sOHMv1.bind(tokenAddress);
+    const sOHMDecimals = sOHMv1Contract.decimals();
 
-    // Mimic a transfer of the difference
+    const tokenHolderIds = token.tokenHolders;
+    // Iterate through all token holders
+    for (let i = 0; i < tokenHolderIds.length; i++) {
+        const tokenHolderId = tokenHolderIds[i];
+        const tokenHolder = TokenHolder.load(tokenHolderId);
+        if (!tokenHolder) {
+            throw new Error(`Expected to find TokenHolder for id ${tokenHolderId}, but it was null.`);
+        }
+
+        const holderAddress = Address.fromBytes(tokenHolder.holder);
+
+        // Determine the current balance of sOHM reported by the sOHM contract
+        const currentBalance = toDecimal(sOHMv1Contract.balanceOf(holderAddress), sOHMDecimals);
+
+        // Determine the previous balance of sOHM
+        const previousBalance = tokenHolder.balance;
+
+        const difference = currentBalance.minus(previousBalance);
+
+        // Mimic a transfer of the difference
+        // TODO should there be a decerement of the staking contract?
+        updateTokenBalance(tokenAddress, holderAddress, toBigInt(difference, sOHMDecimals), false, event.block.number, event.block.timestamp, event.transaction.hash, TYPE_REBASE, event.transaction.index);
+    }
 }
