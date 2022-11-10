@@ -81,7 +81,6 @@ export function updateTokenBalance(
   transaction: Bytes,
   transactionType: string,
   transactionLogIndex: BigInt,
-  skipBalanceAssertion: boolean = false,
 ): void {
   if (arrayIncludesLoose(IGNORED_ADDRESSES, holderAddress.toHexString())) {
     log.debug("holder {} is on ignore list. Skipping", [holderAddress.toHexString()]);
@@ -123,10 +122,15 @@ export function updateTokenBalance(
   // Calculate the new balance
   const adjustedValue = isSender ? BigDecimal.fromString("-1").times(decimalValue) : decimalValue;
   const newBalance = tokenHolder.balance.plus(adjustedValue);
-  if (!skipBalanceAssertion) {
-    assert(
-      newBalance.ge(BigDecimal.zero()),
-      `Balance of token ${tokenName} for holder ${holderAddress.toHexString()} at transaction ${transaction.toHexString()} should be >= 0, but was ${newBalance.toString()}`,
+
+  /**
+   * If the balance is negative, provide a warning. Due to the way we record rebase rewards, 
+   * a transaction in between the rebase and the recording of the rebase rewards may result in a
+   * negative balance.
+   */
+  if (newBalance.lt(BigDecimal.zero())) {
+    log.warning(
+      `Balance of token ${tokenName} for holder ${holderAddress.toHexString()} at transaction ${transaction.toHexString()} should be >= 0, but was ${newBalance.toString()}`, []
     );
   }
 
