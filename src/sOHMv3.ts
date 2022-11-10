@@ -1,12 +1,14 @@
 import { Address } from "@graphprotocol/graph-ts";
-import { Token, TokenHolder } from "../generated/schema";
+import { TokenHolder } from "../generated/schema";
 import { RebaseCall, sOHMv3, Transfer } from "../generated/sOHMv3/sOHMv3";
-import { CHAIN_ETHEREUM, ERC20_SOHM_V3, TYPE_REBASE, TYPE_TRANSFER } from "./constants";
+import { CHAIN_ETHEREUM, ERC20_SOHM_V3, getTokenName, STAKING_V3, TYPE_REBASE, TYPE_TRANSFER } from "./constants";
 import { updateTokenBalance } from "./handleEvent";
 import { toBigInt, toDecimal } from "./helpers/decimalHelper";
-import { getTokenId } from "./helpers/tokenHelper";
+import { createOrLoadToken } from "./helpers/tokenHelper";
 
 export function handleTransfer(event: Transfer): void {
+    const isFromStakingContract = event.params.from.toHexString().toLowerCase() !== STAKING_V3.toLowerCase();
+
     updateTokenBalance(
         event.address,
         event.params.from,
@@ -17,7 +19,9 @@ export function handleTransfer(event: Transfer): void {
         event.transaction.hash,
         TYPE_TRANSFER,
         event.transactionLogIndex,
+        isFromStakingContract ? true : false, // If it's the staking contract, skip the balance assertion
     );
+
     updateTokenBalance(
         event.address,
         event.params.to,
@@ -33,7 +37,7 @@ export function handleTransfer(event: Transfer): void {
 
 export function handleRebase(event: RebaseCall): void {
     // Get list of token holders
-    const token = Token.load(getTokenId(ERC20_SOHM_V3, CHAIN_ETHEREUM));
+    const token = createOrLoadToken(Address.fromString(ERC20_SOHM_V3), getTokenName(ERC20_SOHM_V3), CHAIN_ETHEREUM);
     if (!token) {
         throw new Error(`Expected to find Token record for ${ERC20_SOHM_V3}, but it was null.`);
     }

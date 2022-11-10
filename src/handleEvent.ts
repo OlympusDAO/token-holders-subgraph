@@ -81,21 +81,26 @@ export function updateTokenBalance(
   transaction: Bytes,
   transactionType: string,
   transactionLogIndex: BigInt,
+  skipBalanceAssertion: boolean = false,
 ): void {
   if (arrayIncludesLoose(IGNORED_ADDRESSES, holderAddress.toHexString())) {
     log.debug("holder {} is on ignore list. Skipping", [holderAddress.toHexString()]);
     return;
   }
 
+  const tokenName = getTokenName(tokenAddress.toHexString());
+  assert(tokenName.length > 0, "Could not find token name for " + tokenAddress.toHexString()); // Fail loudly during indexing if we can't get the token name
+
   const tokenDecimals = getTokenDecimals(tokenAddress.toHexString());
   assert(tokenDecimals !== -1, "Could not find token decimals for " + tokenAddress.toHexString());
+
   const decimalValue = toDecimal(value, tokenDecimals);
 
   const unixTimestamp = timestamp.toI64() * 1000;
   log.debug(
     "updateTokenBalance: token {}, holder {}, value {}, isSender {}, type {}, transaction {}, logIndex {}",
     [
-      tokenAddress.toHexString(),
+      tokenName,
       holderAddress.toHexString(),
       decimalValue.toString(),
       isSender ? "true" : "false",
@@ -104,9 +109,6 @@ export function updateTokenBalance(
       transactionLogIndex.toString(),
     ],
   );
-
-  const tokenName = getTokenName(tokenAddress.toHexString());
-  assert(tokenName.length > 0, "Could not find token name for " + tokenAddress.toHexString()); // Fail loudly during indexing if we can't get the token name
 
   // Get the parent token
   const token = createOrLoadToken(tokenAddress, tokenName, CHAIN_ETHEREUM);
@@ -121,10 +123,12 @@ export function updateTokenBalance(
   // Calculate the new balance
   const adjustedValue = isSender ? BigDecimal.fromString("-1").times(decimalValue) : decimalValue;
   const newBalance = tokenHolder.balance.plus(adjustedValue);
-  assert(
-    newBalance.ge(BigDecimal.zero()),
-    "Balance should be >= 0, but was " + newBalance.toString(),
-  );
+  if (!skipBalanceAssertion) {
+    assert(
+      newBalance.ge(BigDecimal.zero()),
+      `Balance of token ${tokenName} for holder ${holderAddress.toHexString()} at transaction ${transaction.toHexString()} should be >= 0, but was ${newBalance.toString()}`,
+    );
+  }
 
   // Create a new balance record
   createTokenHolderTransaction(
