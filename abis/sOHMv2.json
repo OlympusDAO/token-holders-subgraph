@@ -33,13 +33,38 @@
         "anonymous": false,
         "inputs": [
             {
+                "indexed": true,
+                "internalType": "uint256",
+                "name": "epoch",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "rebase",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "index",
+                "type": "uint256"
+            }
+        ],
+        "name": "LogRebase",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
                 "indexed": false,
                 "internalType": "address",
-                "name": "monetaryPolicy",
+                "name": "stakingContract",
                 "type": "address"
             }
         ],
-        "name": "LogMonetaryPolicyUpdated",
+        "name": "LogStakingContractUpdated",
         "type": "event"
     },
     {
@@ -54,11 +79,17 @@
             {
                 "indexed": false,
                 "internalType": "uint256",
+                "name": "timestamp",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
                 "name": "totalSupply",
                 "type": "uint256"
             }
         ],
-        "name": "LogRebase",
+        "name": "LogSupply",
         "type": "event"
     },
     {
@@ -77,7 +108,26 @@
                 "type": "address"
             }
         ],
-        "name": "OwnershipTransferred",
+        "name": "OwnershipPulled",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "previousOwner",
+                "type": "address"
+            },
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "newOwner",
+                "type": "address"
+            }
+        ],
+        "name": "OwnershipPushed",
         "type": "event"
     },
     {
@@ -113,6 +163,19 @@
                 "internalType": "bytes32",
                 "name": "",
                 "type": "bytes32"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "INDEX",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
             }
         ],
         "stateMutability": "view",
@@ -177,6 +240,25 @@
             }
         ],
         "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "gons",
+                "type": "uint256"
+            }
+        ],
+        "name": "balanceForGons",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
         "type": "function"
     },
     {
@@ -251,6 +333,25 @@
     {
         "inputs": [
             {
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            }
+        ],
+        "name": "gonsForBalance",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
                 "internalType": "address",
                 "name": "spender",
                 "type": "address"
@@ -274,7 +375,52 @@
     },
     {
         "inputs": [],
-        "name": "monetaryPolicy",
+        "name": "index",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "stakingContract_",
+                "type": "address"
+            }
+        ],
+        "name": "initialize",
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "initializer",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "manager",
         "outputs": [
             {
                 "internalType": "address",
@@ -312,19 +458,6 @@
                 "internalType": "uint256",
                 "name": "",
                 "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "owner",
-        "outputs": [
-            {
-                "internalType": "address",
-                "name": "",
-                "type": "address"
             }
         ],
         "stateMutability": "view",
@@ -374,10 +507,35 @@
         "type": "function"
     },
     {
+        "inputs": [],
+        "name": "pullManagement",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "newOwner_",
+                "type": "address"
+            }
+        ],
+        "name": "pushManagement",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
         "inputs": [
             {
                 "internalType": "uint256",
-                "name": "olyProfit",
+                "name": "profit_",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "epoch_",
                 "type": "uint256"
             }
         ],
@@ -393,8 +551,57 @@
         "type": "function"
     },
     {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "name": "rebases",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "epoch",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "rebase",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "totalStakedBefore",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "totalStakedAfter",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "amountRebased",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "index",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "blockNumberOccured",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
         "inputs": [],
-        "name": "renounceOwnership",
+        "name": "renounceManagement",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -402,26 +609,19 @@
     {
         "inputs": [
             {
-                "internalType": "address",
-                "name": "monetaryPolicy_",
-                "type": "address"
+                "internalType": "uint256",
+                "name": "_INDEX",
+                "type": "uint256"
             }
         ],
-        "name": "setMonetaryPolicy",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
+        "name": "setIndex",
+        "outputs": [
             {
-                "internalType": "address",
-                "name": "newStakingContract_",
-                "type": "address"
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
             }
         ],
-        "name": "setStakingContract",
-        "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
     },
@@ -514,19 +714,6 @@
                 "type": "bool"
             }
         ],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "newOwner_",
-                "type": "address"
-            }
-        ],
-        "name": "transferOwnership",
-        "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
     }

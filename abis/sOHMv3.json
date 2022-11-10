@@ -33,13 +33,38 @@
         "anonymous": false,
         "inputs": [
             {
+                "indexed": true,
+                "internalType": "uint256",
+                "name": "epoch",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "rebase",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "index",
+                "type": "uint256"
+            }
+        ],
+        "name": "LogRebase",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
                 "indexed": false,
                 "internalType": "address",
-                "name": "monetaryPolicy",
+                "name": "stakingContract",
                 "type": "address"
             }
         ],
-        "name": "LogMonetaryPolicyUpdated",
+        "name": "LogStakingContractUpdated",
         "type": "event"
     },
     {
@@ -58,26 +83,7 @@
                 "type": "uint256"
             }
         ],
-        "name": "LogRebase",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "previousOwner",
-                "type": "address"
-            },
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "newOwner",
-                "type": "address"
-            }
-        ],
-        "name": "OwnershipTransferred",
+        "name": "LogSupply",
         "type": "event"
     },
     {
@@ -108,19 +114,6 @@
     {
         "inputs": [],
         "name": "DOMAIN_SEPARATOR",
-        "outputs": [
-            {
-                "internalType": "bytes32",
-                "name": "",
-                "type": "bytes32"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "PERMIT_TYPEHASH",
         "outputs": [
             {
                 "internalType": "bytes32",
@@ -182,6 +175,25 @@
     {
         "inputs": [
             {
+                "internalType": "uint256",
+                "name": "gons",
+                "type": "uint256"
+            }
+        ],
+        "name": "balanceForGons",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
                 "internalType": "address",
                 "name": "who",
                 "type": "address"
@@ -199,8 +211,50 @@
         "type": "function"
     },
     {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            },
+            {
+                "internalType": "address",
+                "name": "debtor",
+                "type": "address"
+            },
+            {
+                "internalType": "bool",
+                "name": "add",
+                "type": "bool"
+            }
+        ],
+        "name": "changeDebt",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
         "inputs": [],
         "name": "circulatingSupply",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "name": "debtBalances",
         "outputs": [
             {
                 "internalType": "uint256",
@@ -251,6 +305,57 @@
     {
         "inputs": [
             {
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            }
+        ],
+        "name": "fromG",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "gOHM",
+        "outputs": [
+            {
+                "internalType": "contract IgOHM",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            }
+        ],
+        "name": "gonsForBalance",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
                 "internalType": "address",
                 "name": "spender",
                 "type": "address"
@@ -274,15 +379,33 @@
     },
     {
         "inputs": [],
-        "name": "monetaryPolicy",
+        "name": "index",
         "outputs": [
             {
-                "internalType": "address",
+                "internalType": "uint256",
                 "name": "",
-                "type": "address"
+                "type": "uint256"
             }
         ],
         "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "_stakingContract",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "_treasury",
+                "type": "address"
+            }
+        ],
+        "name": "initialize",
+        "outputs": [],
+        "stateMutability": "nonpayable",
         "type": "function"
     },
     {
@@ -318,19 +441,6 @@
         "type": "function"
     },
     {
-        "inputs": [],
-        "name": "owner",
-        "outputs": [
-            {
-                "internalType": "address",
-                "name": "",
-                "type": "address"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
         "inputs": [
             {
                 "internalType": "address",
@@ -344,7 +454,7 @@
             },
             {
                 "internalType": "uint256",
-                "name": "amount",
+                "name": "value",
                 "type": "uint256"
             },
             {
@@ -377,7 +487,12 @@
         "inputs": [
             {
                 "internalType": "uint256",
-                "name": "olyProfit",
+                "name": "profit_",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "epoch_",
                 "type": "uint256"
             }
         ],
@@ -393,8 +508,63 @@
         "type": "function"
     },
     {
-        "inputs": [],
-        "name": "renounceOwnership",
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "name": "rebases",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "epoch",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "rebase",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "totalStakedBefore",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "totalStakedAfter",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "amountRebased",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "index",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "blockNumberOccured",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "_index",
+                "type": "uint256"
+            }
+        ],
+        "name": "setIndex",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -403,24 +573,11 @@
         "inputs": [
             {
                 "internalType": "address",
-                "name": "monetaryPolicy_",
+                "name": "_gOHM",
                 "type": "address"
             }
         ],
-        "name": "setMonetaryPolicy",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "newStakingContract_",
-                "type": "address"
-            }
-        ],
-        "name": "setStakingContract",
+        "name": "setgOHM",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -446,6 +603,25 @@
                 "internalType": "string",
                 "name": "",
                 "type": "string"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            }
+        ],
+        "name": "toG",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
             }
         ],
         "stateMutability": "view",
@@ -518,16 +694,16 @@
         "type": "function"
     },
     {
-        "inputs": [
+        "inputs": [],
+        "name": "treasury",
+        "outputs": [
             {
                 "internalType": "address",
-                "name": "newOwner_",
+                "name": "",
                 "type": "address"
             }
         ],
-        "name": "transferOwnership",
-        "outputs": [],
-        "stateMutability": "nonpayable",
+        "stateMutability": "view",
         "type": "function"
     }
 ]
