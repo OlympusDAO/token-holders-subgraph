@@ -46,8 +46,8 @@ export function handleTransfer(event: Transfer): void {
  * @returns 
  */
 export function handleBlock(block: ethereum.Block): void {
-    // Every 8 hours
-    if (block.number.mod(BigInt.fromI32(8 * 60 * 60 / 12)).notEqual(BigInt.zero())) {
+    // Every 24 hours
+    if (block.number.mod(BigInt.fromI32(24 * 60 * 60 / 12)).notEqual(BigInt.zero())) {
         return;
     }
 
@@ -65,6 +65,11 @@ export function handleBlock(block: ethereum.Block): void {
     // Iterate through all token holders
     for (let i = 0; i < tokenHolderIds.length; i++) {
         const tokenHolderId = tokenHolderIds[i];
+        // In case a null value creeps in
+        if (!tokenHolderId) {
+            continue;
+        }
+
         const tokenHolder = TokenHolder.load(tokenHolderId);
         if (!tokenHolder) {
             throw new Error(`Expected to find TokenHolder for id ${tokenHolderId}, but it was null.`);
