@@ -1,4 +1,4 @@
-import { Address, BigDecimal, BigInt, ethereum } from "@graphprotocol/graph-ts";
+import { Address, BigDecimal, BigInt, ethereum, log } from "@graphprotocol/graph-ts";
 import { TokenHolder } from "../generated/schema";
 import { sOHMv1, Transfer } from "../generated/sOHMv1/sOHMv1";
 import { CHAIN_ETHEREUM, ERC20_SOHM_V1, getTokenName, STAKING_V1, TYPE_REBASE, TYPE_TRANSFER } from "./constants";
@@ -52,16 +52,22 @@ export function handleBlock(block: ethereum.Block): void {
     }
 
     // Get list of token holders
-    const token = createOrLoadToken(Address.fromString(ERC20_SOHM_V1), getTokenName(ERC20_SOHM_V1), CHAIN_ETHEREUM);
+    const currentToken = ERC20_SOHM_V1;
+    const tokenAddress = Address.fromString(currentToken);
+    const token = createOrLoadToken(tokenAddress, getTokenName(currentToken), CHAIN_ETHEREUM);
     if (!token) {
-        throw new Error(`Expected to find Token record for ${ERC20_SOHM_V1}, but it was null.`);
+        throw new Error(`Expected to find Token record for ${currentToken}, but it was null.`);
     }
 
-    const tokenAddress = Address.fromString(ERC20_SOHM_V1);
     const sOHMv1Contract = sOHMv1.bind(tokenAddress);
     const sOHMDecimals = sOHMv1Contract.decimals();
 
     const tokenHolderIds = token.tokenHolders;
+    if (!tokenHolderIds || tokenHolderIds.length === 0) {
+        log.warning("Skipping empty or null token holder ids for token {} at block {}", [currentToken, block.number.toString()]);
+        return;
+    }
+
     // Iterate through all token holders
     for (let i = 0; i < tokenHolderIds.length; i++) {
         const tokenHolderId = tokenHolderIds[i];

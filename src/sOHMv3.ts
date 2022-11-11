@@ -1,4 +1,4 @@
-import { Address, BigDecimal, BigInt, ethereum } from "@graphprotocol/graph-ts";
+import { Address, BigDecimal, BigInt, ethereum, log } from "@graphprotocol/graph-ts";
 import { TokenHolder } from "../generated/schema";
 import { sOHMv3, Transfer } from "../generated/sOHMv3/sOHMv3";
 import { CHAIN_ETHEREUM, ERC20_SOHM_V3, getTokenName, STAKING_V3, TYPE_REBASE, TYPE_TRANSFER } from "./constants";
@@ -46,20 +46,36 @@ export function handleTransfer(event: Transfer): void {
  * @returns 
  */
 export function handleBlock(block: ethereum.Block): void {
-    // Get list of token holders
-    const token = createOrLoadToken(Address.fromString(ERC20_SOHM_V3), getTokenName(ERC20_SOHM_V3), CHAIN_ETHEREUM);
-    if (!token) {
-        throw new Error(`Expected to find Token record for ${ERC20_SOHM_V3}, but it was null.`);
+    // Every 24 hours
+    if (block.number.mod(BigInt.fromI32(24 * 60 * 60 / 12)).notEqual(BigInt.zero())) {
+        return;
     }
 
-    const tokenAddress = Address.fromString(ERC20_SOHM_V3);
+    // Get list of token holders
+    const currentToken = ERC20_SOHM_V3;
+    const tokenAddress = Address.fromString(currentToken);
+    const token = createOrLoadToken(tokenAddress, getTokenName(currentToken), CHAIN_ETHEREUM);
+    if (!token) {
+        throw new Error(`Expected to find Token record for ${currentToken}, but it was null.`);
+    }
+
     const sOHMv3Contract = sOHMv3.bind(tokenAddress);
     const sOHMDecimals = sOHMv3Contract.decimals();
 
     const tokenHolderIds = token.tokenHolders;
+    if (!tokenHolderIds || tokenHolderIds.length === 0) {
+        log.warning("Skipping empty or null token holder ids for token {} at block {}", [currentToken, block.number.toString()]);
+        return;
+    }
+
     // Iterate through all token holders
     for (let i = 0; i < tokenHolderIds.length; i++) {
         const tokenHolderId = tokenHolderIds[i];
+        // In case a null value creeps in
+        if (!tokenHolderId) {
+            continue;
+        }
+
         const tokenHolder = TokenHolder.load(tokenHolderId);
         if (!tokenHolder) {
             throw new Error(`Expected to find TokenHolder for id ${tokenHolderId}, but it was null.`);
