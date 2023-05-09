@@ -1,0 +1,46 @@
+specVersion: 0.0.4
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: gOHM
+    network: arbitrum-one
+    source:
+      address: "0x8D9bA570D6cb60C7e3e0F31343Efe75AB8E65FB1"
+      abi: gOHM
+      startBlock: 3311260
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Transfer
+      abis:
+        - name: gOHM
+          file: ./abis/gOHM.json
+      # Handling the transfer event is enough, as minting/burning will result in a transfer
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer
+      file: ./src/handleEvent.ts
+  - kind: ethereum
+    name: OHM
+    network: arbitrum-one
+    source:
+      address: "0xf0cb2dc0db5e6c66B9a70Ac27B06b878da017028"
+      abi: ERC20
+      startBlock: 85886493
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Transfer
+      abis:
+        - name: ERC20
+          file: ./abis/ERC20.json
+      # Handling the transfer event is enough, as minting/burning will result in a transfer
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer
+      file: ./src/handleEvent.ts

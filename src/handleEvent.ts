@@ -14,6 +14,10 @@ const ERC20_SOHM_V1 = "0x04F2694C8fcee23e8Fd0dfEA1d4f5Bb8c352111F";
 const ERC20_OHM_V2 = "0x64aa3364f17a4d01c6f1751fd97c2bd3d7e7f1d5";
 const ERC20_SOHM_V2 = "0x04906695D6D12CF5459975d7C3C03356E4Ccd460";
 
+// Arbitrum
+const ERC20_ARBITRUM_GOHM_SYNAPSE = "0x8D9bA570D6cb60C7e3e0F31343Efe75AB8E65FB1";
+const ERC20_ARBITRUM_OHM = "0xf0cb2dc0db5e6c66B9a70Ac27B06b878da017028";
+
 const NULL = "0x0000000000000000000000000000000000000000";
 const IGNORED_ADDRESSES = [
   ERC20_GOHM,
@@ -21,6 +25,8 @@ const IGNORED_ADDRESSES = [
   ERC20_OHM_V2,
   ERC20_SOHM_V1,
   ERC20_SOHM_V2,
+  ERC20_ARBITRUM_GOHM_SYNAPSE,
+  ERC20_ARBITRUM_OHM,
   NULL,
 ];
 
@@ -34,6 +40,8 @@ TOKENS.set(ERC20_OHM_V1.toLowerCase(), "OHM V1");
 TOKENS.set(ERC20_SOHM_V1.toLowerCase(), "sOHM V1");
 TOKENS.set(ERC20_OHM_V2.toLowerCase(), "OHM V2");
 TOKENS.set(ERC20_SOHM_V2.toLowerCase(), "sOHM V2");
+TOKENS.set(ERC20_ARBITRUM_GOHM_SYNAPSE.toLowerCase(), "gOHM (Arbitrum - Synapse)");
+TOKENS.set(ERC20_ARBITRUM_OHM.toLowerCase(), "OHM (Arbitrum)");
 
 function getTokenName(address: string): string {
   if (!TOKENS.has(address.toLowerCase())) {
@@ -49,6 +57,8 @@ TOKEN_DECIMALS.set(ERC20_OHM_V1.toLowerCase(), "9");
 TOKEN_DECIMALS.set(ERC20_SOHM_V1.toLowerCase(), "9");
 TOKEN_DECIMALS.set(ERC20_OHM_V2.toLowerCase(), "9");
 TOKEN_DECIMALS.set(ERC20_SOHM_V2.toLowerCase(), "9");
+TOKEN_DECIMALS.set(ERC20_ARBITRUM_GOHM_SYNAPSE.toLowerCase(), "18");
+TOKEN_DECIMALS.set(ERC20_ARBITRUM_OHM.toLowerCase(), "9");
 
 function getTokenDecimals(address: string): number {
   if (!TOKEN_DECIMALS.has(address.toLowerCase())) {
