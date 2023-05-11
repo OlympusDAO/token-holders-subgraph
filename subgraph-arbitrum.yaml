@@ -21,7 +21,7 @@ dataSources:
       # Handling the transfer event is enough, as minting/burning will result in a transfer
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
-          handler: handleTransfer
+          handler: handleTransferArbitrum
       file: ./src/handleEvent.ts
   - kind: ethereum
     name: OHM
@@ -42,5 +42,5 @@ dataSources:
       # Handling the transfer event is enough, as minting/burning will result in a transfer
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
-          handler: handleTransfer
+          handler: handleTransferArbitrum
       file: ./src/handleEvent.ts

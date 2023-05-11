@@ -21,7 +21,7 @@ dataSources:
       # Handling the transfer event is enough, as minting/burning will result in a transfer
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
-          handler: handleTransfer
+          handler: handleTransferEthereum
       file: ./src/handleEvent.ts
   - kind: ethereum
     name: OHMv1
@@ -42,7 +42,7 @@ dataSources:
       # Handling the transfer event is enough, as minting/burning will result in a transfer
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
-          handler: handleTransfer
+          handler: handleTransferEthereum
       file: ./src/handleEvent.ts
   # - kind: ethereum
   #   name: sOHMv1
@@ -63,7 +63,7 @@ dataSources:
   #     # Handling the transfer event is enough, as minting/burning will result in a transfer
   #     eventHandlers:
   #       - event: Transfer(indexed address,indexed address,uint256)
-  #         handler: handleTransfer
+  #         handler: handleTransferEthereum
   #     file: ./src/handleEvent.ts
   - kind: ethereum
     name: OHMv2
@@ -84,7 +84,7 @@ dataSources:
       # Handling the transfer event is enough, as minting/burning will result in a transfer
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
-          handler: handleTransfer
+          handler: handleTransferEthereum
       file: ./src/handleEvent.ts
   # - kind: ethereum
   #   name: sOHMv2
@@ -105,5 +105,5 @@ dataSources:
   #     # Handling the transfer event is enough, as minting/burning will result in a transfer
   #     eventHandlers:
   #       - event: Transfer(indexed address,indexed address,uint256)
-  #         handler: handleTransfer
+  #         handler: handleTransferEthereum
   #     file: ./src/handleEvent.ts

@@ -8,6 +8,9 @@ import { toDecimal } from "./decimalHelper";
 
 // Inspired by: https://github.com/xdaichain/token-holders-subgraph/blob/master/src/mapping.ts
 
+const CHAIN_ETHEREUM = "Ethereum";
+const CHAIN_ARBITRUM = "Arbitrum";
+
 const ERC20_GOHM = "0x0ab87046fbb341d058f17cbc4c1133f25a20a52f";
 const ERC20_OHM_V1 = "0x383518188c0c6d7730d91b2c03a03c837814a899";
 const ERC20_SOHM_V1 = "0x04F2694C8fcee23e8Fd0dfEA1d4f5Bb8c352111F";
@@ -145,6 +148,7 @@ function updateTokenBalance(
   transaction: Bytes,
   transactionType: string,
   transactionLogIndex: BigInt,
+  blockchain: string,
 ): void {
   if (arrayIncludesLoose(IGNORED_ADDRESSES, holderAddress.toHexString())) {
     log.debug("holder {} is on ignore list. Skipping", [holderAddress.toHexString()]);
@@ -173,7 +177,7 @@ function updateTokenBalance(
   assert(tokenName.length > 0, "Could not find token name for " + tokenAddress.toHexString()); // Fail loudly during indexing if we can't get the token name
 
   // Get the parent token
-  const token = createOrLoadToken(tokenAddress, tokenName, "Ethereum");
+  const token = createOrLoadToken(tokenAddress, tokenName, blockchain);
 
   // Get the token holder record
   const tokenHolder = createOrLoadTokenHolder(token, holderAddress);
@@ -209,7 +213,7 @@ function updateTokenBalance(
   tokenHolder.save();
 }
 
-export function handleTransfer(event: Transfer): void {
+export function handleTransferArbitrum(event: Transfer): void {
   updateTokenBalance(
     event.address,
     event.params.from,
@@ -222,6 +226,7 @@ export function handleTransfer(event: Transfer): void {
     event.transaction.hash,
     TYPE_TRANSFER,
     event.transactionLogIndex,
+    CHAIN_ARBITRUM,
   );
   updateTokenBalance(
     event.address,
@@ -235,5 +240,37 @@ export function handleTransfer(event: Transfer): void {
     event.transaction.hash,
     TYPE_TRANSFER,
     event.transactionLogIndex,
+    CHAIN_ARBITRUM,
+  );
+}
+
+export function handleTransferEthereum(event: Transfer): void {
+  updateTokenBalance(
+    event.address,
+    event.params.from,
+    event.params.from,
+    event.params.to,
+    event.params.value,
+    true,
+    event.block.number,
+    event.block.timestamp,
+    event.transaction.hash,
+    TYPE_TRANSFER,
+    event.transactionLogIndex,
+    CHAIN_ETHEREUM,
+  );
+  updateTokenBalance(
+    event.address,
+    event.params.to,
+    event.params.from,
+    event.params.to,
+    event.params.value,
+    false,
+    event.block.number,
+    event.block.timestamp,
+    event.transaction.hash,
+    TYPE_TRANSFER,
+    event.transactionLogIndex,
+    CHAIN_ETHEREUM,
   );
 }
