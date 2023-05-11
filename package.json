@@ -7,7 +7,8 @@
   "scripts": {
     "codegen": "graph codegen && yarn eslint --config ./.eslintrc.json --fix generated/",
     "build": "graph build",
-    "deploy:hosted": "source .subgraph-version && graph deploy --node https://api.thegraph.com/deploy/ --ipfs https://api.thegraph.com/ipfs/ olympusdao/token-holders",
+    "deploy:hosted": "source .subgraph-version && source .env && graph deploy --node https://api.thegraph.com/deploy/ --ipfs https://api.thegraph.com/ipfs/ --deploy-key $GRAPH_TOKEN olympusdao/token-holders",
+    "deploy:hosted:arbitrum": "source .subgraph-version && source .env && graph deploy --node https://api.thegraph.com/deploy/ --ipfs https://api.thegraph.com/ipfs/ --deploy-key $GRAPH_TOKEN 0xjem/token-holders-arbitrum subgraph-arbitrum.yaml",
     "deploy:ethereum": "source .subgraph-version && source .env && graph deploy --studio --deploy-key $GRAPH_STUDIO_TOKEN --version-label $SUBGRAPH_VERSION token-holders subgraph.yaml",
     "deploy:arbitrum": "source .subgraph-version && source .env && graph deploy --studio --deploy-key $GRAPH_STUDIO_TOKEN --version-label $SUBGRAPH_VERSION token-holders-arbitrum subgraph-arbitrum.yaml",
     "test": "graph test --version 0.5.3",
