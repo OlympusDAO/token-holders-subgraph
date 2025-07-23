@@ -16,7 +16,7 @@
     "auth": "source .env && graph auth --product hosted-service $GRAPH_TOKEN"
   },
   "dependencies": {
-    "@graphprotocol/graph-cli": "^0.49.0",
+    "@graphprotocol/graph-cli": "^0.67.2",
     "@graphprotocol/graph-ts": "^0.30.0",
     "assemblyscript-json": "^1.1.0"
   },
