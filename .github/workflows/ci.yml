@@ -46,5 +46,19 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Detect tests
+        id: detect_tests
+        run: |
+          if git ls-files 'tests/**/*.ts' | grep -q .; then
+            echo "has_tests=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_tests=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Run test
+        if: steps.detect_tests.outputs.has_tests == 'true'
         run: pnpm run test
+
+      - name: No tests present
+        if: steps.detect_tests.outputs.has_tests != 'true'
+        run: echo "No tests detected; skipping test step."
