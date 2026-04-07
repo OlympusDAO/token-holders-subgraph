@@ -7,6 +7,8 @@
   "scripts": {
     "codegen": "graph codegen && yarn eslint --config ./.eslintrc.json --fix generated/",
     "build": "graph build",
+    "lint": "prettier --write . && eslint --config ./.eslintrc.json --fix src generated",
+    "lint:check": "prettier --check . && eslint --config ./.eslintrc.json src generated",
     "deploy:hosted": "source .subgraph-version && source .env && graph deploy --node https://api.thegraph.com/deploy/ --ipfs https://api.thegraph.com/ipfs/ --deploy-key $GRAPH_TOKEN olympusdao/token-holders",
     "deploy:hosted:arbitrum": "source .subgraph-version && source .env && graph deploy --node https://api.thegraph.com/deploy/ --ipfs https://api.thegraph.com/ipfs/ --deploy-key $GRAPH_TOKEN 0xjem/token-holders-arbitrum subgraph-arbitrum.yaml",
     "deploy:ethereum": "source .subgraph-version && source .env && graph deploy --studio --deploy-key $GRAPH_STUDIO_TOKEN --version-label $SUBGRAPH_VERSION token-holders subgraph.yaml",
@@ -17,7 +19,7 @@
     "preinstall": "npx only-allow@1.2.2 pnpm"
   },
   "dependencies": {
-    "@graphprotocol/graph-cli": "^0.96.0",
+    "@graphprotocol/graph-cli": "^0.98.1",
     "@graphprotocol/graph-ts": "^0.30.0",
     "assemblyscript-json": "^1.1.0"
   },
@@ -39,6 +41,9 @@
   },
   "pnpm": {
     "overrides": {
+      "@eslint/eslintrc>ajv": "6.14.0",
+      "@eslint/eslintrc@1.3.0>ajv": "6.14.0",
+      "eslint>ajv": "6.14.0",
       "ajv": ">=6.14.0",
       "ajv@<6.14.0": ">=6.14.0",
       "axios": ">=0.30.3",

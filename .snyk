@@ -1,0 +1,7 @@
+version: v1.25.1
+ignore:
+  SNYK-JS-DECOMPRESSTAR-559095:
+    - '*':
+        reason: No upstream fix available; transitive via @graphprotocol/graph-cli
+        expires: 2026-07-31T00:00:00.000Z
+patch: {}
