@@ -20,14 +20,14 @@ type TokenHolderTransaction @entity(immutable: true) {
   value: BigDecimal!
 }
 
-type TokenHolder @entity {
+type TokenHolder @entity(immutable: false) {
   id: ID! # <token ID>-holder
   balance: BigDecimal!
   holder: Bytes!
   token: Token!
 }
 
-type Token @entity {
+type Token @entity(immutable: false) {
   id: ID! # token-blockchain
   address: Bytes!
   blockchain: String!

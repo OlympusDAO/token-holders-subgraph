@@ -116,8 +116,9 @@ function createTokenHolderTransaction(
   transactionLogIndex: BigInt,
 ): TokenHolderTransaction {
   // The balanceId incorporates the transactionLogIndex, so that multiple transfers within a single transaction can be recorded
-  const balanceId = `${tokenHolder.id
-    }/${transaction.toHexString()}/${transactionLogIndex.toString()}`;
+  const balanceId = `${
+    tokenHolder.id
+  }/${transaction.toHexString()}/${transactionLogIndex.toString()}`;
   const tokenBalance = new TokenHolderTransaction(balanceId);
   tokenBalance.balance = balance;
   tokenBalance.block = block;
