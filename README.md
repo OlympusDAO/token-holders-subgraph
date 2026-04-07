@@ -21,4 +21,4 @@
 Indexing takes place in the following circumstances:
 
 - Transfer function call
-    - When the `transfer` function is called on any of the tokens, a `TokenHolderTransaction` record is created for each of the sender and receiver.
+  - When the `transfer` function is called on any of the tokens, a `TokenHolderTransaction` record is created for each of the sender and receiver.
