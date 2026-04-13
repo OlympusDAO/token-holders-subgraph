@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-This repository is part of the OlympusDAO organization.
+This repository contains a token indexing subgraph for OHM, gOHM, and related token holder or transfer state across supported contracts.
 
 ## Node and Tooling
 
