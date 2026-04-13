@@ -10,7 +10,7 @@ overrides:
   eslint>ajv: 6.14.0
   ajv: ">=6.14.0"
   ajv@<6.14.0: ">=6.14.0"
-  axios: ">=0.30.3"
+  axios: ">=1.15.0"
   axios@<0.30.0: ">=0.30.0"
   axios@<=0.30.2: ">=0.30.3"
   axios@>=0.8.1 <0.28.0: ">=0.28.0"
@@ -59,6 +59,8 @@ overrides:
   yaml: ">=2.8.3"
   yaml@>=1.0.0 <1.10.3: ">=1.10.3"
   yaml@>=2.0.0 <2.8.3: ">=2.8.3"
+  axios@<1.15.0: ">=1.15.0"
+  apisauce>axios: ">=1.15.0"
 
 importers:
   .:
@@ -903,10 +905,10 @@ packages:
       }
     engines: { node: ">= 0.4" }
 
-  axios@1.14.0:
+  axios@1.15.0:
     resolution:
       {
-        integrity: sha512-3Y8yrqLSwjuzpXuZ0oIYZ/XGgLwUIBU3uLvbcpb0pidD9ctpShJd43KSlEEkVQg6DS0G9NKyzOvBfUtDKEyHvQ==,
+        integrity: sha512-wWyJDlAatxk30ZJer+GeCWS209sA42X+N5jU2jy6oHTp7ufw8uzUTVFBX9+wTfAlhiJXGS0Bq7X6efruWjuK9Q==,
       }
 
   balanced-match@4.0.4:
@@ -4210,7 +4212,7 @@ snapshots:
 
   apisauce@2.1.6(debug@4.4.3):
     dependencies:
-      axios: 1.14.0(debug@4.4.3)
+      axios: 1.15.0(debug@4.4.3)
     transitivePeerDependencies:
       - debug
 
@@ -4241,7 +4243,7 @@ snapshots:
     dependencies:
       possible-typed-array-names: 1.1.0
 
-  axios@1.14.0(debug@4.4.3):
+  axios@1.15.0(debug@4.4.3):
     dependencies:
       follow-redirects: 1.15.11(debug@4.4.3)
       form-data: 4.0.5
