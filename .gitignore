@@ -65,3 +65,5 @@ build
 
 # Test build files
 tests/.bin/
+
+.pnpm-store/
