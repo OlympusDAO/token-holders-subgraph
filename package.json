@@ -5,6 +5,7 @@
   "author": "Jem <0x0xjem@gmail.com>",
   "license": "MIT",
   "scripts": {
+    "preinstall": "node -e \"if (!process.env.npm_config_user_agent?.startsWith('pnpm/')) { console.error('Use pnpm'); process.exit(1) }\"",
     "codegen": "graph codegen && yarn eslint --config ./.eslintrc.json --fix generated/",
     "build": "graph build",
     "lint": "prettier --write . && eslint --config ./.eslintrc.json --fix src generated",
