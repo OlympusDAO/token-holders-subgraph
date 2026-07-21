@@ -10,7 +10,7 @@ overrides:
   brace-expansion@<2.0.3: ^2.0.3
   braces@<3.0.3: ^3.0.3
   cross-spawn@<7.0.5: ^7.0.5
-  decompress@<=4.2.1: npm:@xhmikosr/decompress@^11.1.3
+  "@graphprotocol/graph-cli>decompress@<=4.2.1": npm:@xhmikosr/decompress@^11.1.3
   ejs@<3.1.10: ^3.1.10
   flatted@<3.4.2: ^3.4.2
   follow-redirects@<1.16.0: ^1.16.0
