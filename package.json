@@ -15,8 +15,7 @@
     "deploy:arbitrum": "source .subgraph-version && source .env && graph deploy --studio --deploy-key $GRAPH_STUDIO_TOKEN --version-label $SUBGRAPH_VERSION token-holders-arbitrum subgraph-arbitrum.yaml",
     "test": "graph test --version 0.5.3",
     "test:force": "yarn test --recompile",
-    "auth": "source .env && graph auth --product hosted-service $GRAPH_TOKEN",
-    "preinstall": "npx only-allow@1.2.2 pnpm"
+    "auth": "source .env && graph auth --product hosted-service $GRAPH_TOKEN"
   },
   "dependencies": {
     "@graphprotocol/graph-cli": "^0.98.1",
@@ -35,9 +34,9 @@
   },
   "engines": {
     "node": ">=24",
-    "pnpm": ">=10.33.0",
+    "pnpm": ">=11.13.0",
     "npm": "use-pnpm",
     "yarn": "use-pnpm"
   },
-  "packageManager": "pnpm@10.33.0"
+  "packageManager": "pnpm@11.13.0"
 }
