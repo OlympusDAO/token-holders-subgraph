@@ -6,8 +6,8 @@ settings:
 
 overrides:
   ajv@<6.14.0: ^6.14.0
-  axios@<1.15.2: ^1.15.2
-  brace-expansion@<2.0.3: ^2.0.3
+  axios@<1.18.0: ^1.18.0
+  brace-expansion@<2.1.2: ^2.1.2
   braces@<3.0.3: ^3.0.3
   cross-spawn@<7.0.5: ^7.0.5
   "@graphprotocol/graph-cli>decompress@<=4.2.1": npm:@xhmikosr/decompress@^11.1.3
@@ -16,7 +16,7 @@ overrides:
   follow-redirects@<1.16.0: ^1.16.0
   form-data@>=4.0.0 <4.0.6: ^4.0.6
   glob@<11.1.0: ^11.1.0
-  immutable@<5.1.5: ^5.1.5
+  immutable@<5.1.8: ^5.1.8
   js-yaml@<=4.1.1: ^4.2.0
   lodash.trim@<4.18.0: 4.18.0
   lodash.trimend@<4.18.0: 4.18.0
@@ -818,6 +818,13 @@ packages:
     engines: { node: ">=0.4.0" }
     hasBin: true
 
+  agent-base@6.0.2:
+    resolution:
+      {
+        integrity: sha512-RZNwNclF7+MS/8bDg70amg32dyeZGZxiDuQmZxKLAlQjr3jGyLx+4Kkk58UO7D2QdgFIQCovuSuZESne6RG6XQ==,
+      }
+    engines: { node: ">= 6.0.0" }
+
   ajv@6.14.0:
     resolution:
       {
@@ -944,10 +951,10 @@ packages:
       }
     engines: { node: ">= 0.4" }
 
-  axios@1.16.0:
+  axios@1.18.1:
     resolution:
       {
-        integrity: sha512-6hp5CwvTPlN2A31g5dxnwAX0orzM7pmCRDLnZSX772mv8WDqICwFjowHuPs04Mc8deIld1+ejhtaMn5vp6b+1w==,
+        integrity: sha512-3nTvFlvpn9Zu/RkHUqtc7/+al4UpRW5az71ap5zccp6e8RAYEzhMTecX8Dz1wWDYrPpUoB1HAQEGEAEvUr7S9g==,
       }
 
   b4a@1.8.1:
@@ -1011,10 +1018,10 @@ packages:
         integrity: sha512-I39vO57y+LBEIcAV7fif0sn96fYOYVqrPiOD+53MxQGv4DBgt1/HHZh0BHheWx2hVe24q5LTSXxqeV1Y3Nzkgg==,
       }
 
-  brace-expansion@2.1.0:
+  brace-expansion@2.1.2:
     resolution:
       {
-        integrity: sha512-TN1kCZAgdgweJhWWpgKYrQaMNHcDULHkWwQIspdtjV4Y5aurRdZpjAqn6yX3FPqTA9ngHCc4hJxMAMgGfve85w==,
+        integrity: sha512-w5JZcKgdhDOgOwm8H+KgbosopHMuGcl6qbulwjtz3SM7I7P3yW1eAjzMPLrIE+NQ9vjgANKHWeMHnrT0OXW1oA==,
       }
 
   brace-expansion@5.0.7:
@@ -1937,13 +1944,6 @@ packages:
         integrity: sha512-0cMsjjIC8I+D3M44pOQdsy0OHXGLVz6Z0beRuufhKa0KfaD2wGwAev6jILzXsd3/vpnNQJmWyZtIILqM1N+n5A==,
       }
 
-  hasown@2.0.2:
-    resolution:
-      {
-        integrity: sha512-0hJU9SCPvmMzIBdZFqNPXWa6dqh7WdH0cII9y+CyS8rG3nL48Bclra9HmKhVVUHyPWNH5Y7xDwAB7bfgSjkUMQ==,
-      }
-    engines: { node: ">= 0.4" }
-
   hasown@2.0.4:
     resolution:
       {
@@ -1957,6 +1957,13 @@ packages:
         integrity: sha512-ahwimsC23ICE4kPl9xTBjKB4inbRaeLyZeRunC/1Jy/Z6X8tv22MEAjK+KBOMSVLaqXPTTmd8638waVIKLGx2w==,
       }
     engines: { node: ">=8.0.0" }
+
+  https-proxy-agent@5.0.1:
+    resolution:
+      {
+        integrity: sha512-dFcAjpTQFgoLMzC2VwU+C/CbS7uRL0lWmxDITmqm7C+7F0Odmj6s9l6alZc6AELXhrnggM2CeWSXHGOdX2YtwA==,
+      }
+    engines: { node: ">= 6" }
 
   human-signals@2.1.0:
     resolution:
@@ -1992,10 +1999,10 @@ packages:
       }
     engines: { node: ">= 4" }
 
-  immutable@5.1.5:
+  immutable@5.1.9:
     resolution:
       {
-        integrity: sha512-t7xcm2siw+hlUM68I+UEOK+z84RzmN59as9DZ7P1l0994DKUWV7UXBMQZVxaoMSRQ+PBZbHCOoBt7a2wxOMt+A==,
+        integrity: sha512-m8nVez3rwrgmWxtLMt1ZYXB2Lv7OKYn/disyxAlSDYAlKSlFoPPfIAmAM/M5xqL4m4C/wAPw7S2/CNaUii1Hxg==,
       }
 
   import-fresh@3.3.0:
@@ -3660,7 +3667,7 @@ snapshots:
       glob: 11.1.0
       gluegun: 5.2.0(debug@4.4.3(supports-color@8.1.1))
       graphql: 16.11.0
-      immutable: 5.1.5
+      immutable: 5.1.9
       jayson: 4.2.0
       js-yaml: 4.3.0
       kubo-rpc-client: 5.4.1(undici@7.28.0)
@@ -4239,6 +4246,12 @@ snapshots:
 
   acorn@8.8.2: {}
 
+  agent-base@6.0.2:
+    dependencies:
+      debug: 4.4.3(supports-color@8.1.1)
+    transitivePeerDependencies:
+      - supports-color
+
   ajv@6.14.0:
     dependencies:
       fast-deep-equal: 3.1.3
@@ -4270,9 +4283,10 @@ snapshots:
 
   apisauce@2.1.6(debug@4.4.3(supports-color@8.1.1)):
     dependencies:
-      axios: 1.16.0(debug@4.4.3(supports-color@8.1.1))
+      axios: 1.18.1(debug@4.4.3(supports-color@8.1.1))
     transitivePeerDependencies:
       - debug
+      - supports-color
 
   app-module-path@2.2.0: {}
 
@@ -4301,13 +4315,15 @@ snapshots:
     dependencies:
       possible-typed-array-names: 1.1.0
 
-  axios@1.16.0(debug@4.4.3(supports-color@8.1.1)):
+  axios@1.18.1(debug@4.4.3(supports-color@8.1.1)):
     dependencies:
       follow-redirects: 1.16.0(debug@4.4.3(supports-color@8.1.1))
       form-data: 4.0.6
+      https-proxy-agent: 5.0.1
       proxy-from-env: 2.1.0
     transitivePeerDependencies:
       - debug
+      - supports-color
 
   b4a@1.8.1: {}
 
@@ -4327,7 +4343,7 @@ snapshots:
     dependencies:
       browser-readablestream-to-it: 2.0.10
 
-  brace-expansion@2.1.0:
+  brace-expansion@2.1.2:
     dependencies:
       balanced-match: 1.0.2
 
@@ -4554,7 +4570,7 @@ snapshots:
       es-errors: 1.3.0
       get-intrinsic: 1.3.0
       has-tostringtag: 1.0.2
-      hasown: 2.0.2
+      hasown: 2.0.4
 
   es6-promise@4.2.8: {}
 
@@ -4803,7 +4819,7 @@ snapshots:
       get-proto: 1.0.1
       gopd: 1.2.0
       has-symbols: 1.1.0
-      hasown: 2.0.2
+      hasown: 2.0.4
       math-intrinsics: 1.1.0
 
   get-iterator@1.0.2: {}
@@ -4886,6 +4902,7 @@ snapshots:
       yargs-parser: 21.1.1
     transitivePeerDependencies:
       - debug
+      - supports-color
 
   gopd@1.2.0: {}
 
@@ -4917,10 +4934,6 @@ snapshots:
 
   hashlru@2.3.0: {}
 
-  hasown@2.0.2:
-    dependencies:
-      function-bind: 1.1.2
-
   hasown@2.0.4:
     dependencies:
       function-bind: 1.1.2
@@ -4933,6 +4946,13 @@ snapshots:
       is-stream: 2.0.1
       parse-json: 4.0.0
       tunnel-agent: 0.6.0
+    transitivePeerDependencies:
+      - supports-color
+
+  https-proxy-agent@5.0.1:
+    dependencies:
+      agent-base: 6.0.2
+      debug: 4.4.3(supports-color@8.1.1)
     transitivePeerDependencies:
       - supports-color
 
@@ -4950,7 +4970,7 @@ snapshots:
 
   ignore@5.2.0: {}
 
-  immutable@5.1.5: {}
+  immutable@5.1.9: {}
 
   import-fresh@3.3.0:
     dependencies:
@@ -5029,7 +5049,7 @@ snapshots:
       call-bound: 1.0.4
       gopd: 1.2.0
       has-tostringtag: 1.0.2
-      hasown: 2.0.2
+      hasown: 2.0.4
 
   is-retry-allowed@1.2.0: {}
 
@@ -5273,11 +5293,11 @@ snapshots:
 
   minimatch@5.1.9:
     dependencies:
-      brace-expansion: 2.1.0
+      brace-expansion: 2.1.2
 
   minimatch@9.0.9:
     dependencies:
-      brace-expansion: 2.1.0
+      brace-expansion: 2.1.2
 
   minipass@7.1.3: {}
 
